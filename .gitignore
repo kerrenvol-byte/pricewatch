@@ -1,0 +1,16 @@
+node_modules/
+
+# מסד הנתונים מכיל סודות (סיסמת מייל, קוד כניסה) — לעולם לא נכנס לגיט
+pricewatch.db
+pricewatch.db-journal
+
+# לוגים וקבצים מקומיים
+server.log
+debug.log
+test-results/
+playwright-report/
+*.local
+
+# כלים מקומיים ל-Windows — לא רלוונטיים לענן
+cloudflared.exe
+*.vbs

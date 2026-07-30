@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e3a8a">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>PriceWatch — כניסה</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Heebo", Arial, sans-serif;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .box {
+    background: #fff; border-radius: 18px; padding: 36px 30px; width: 100%; max-width: 380px;
+    text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .logo { font-size: 52px; }
+  h1 { font-size: 21px; margin: 10px 0 4px; color: #1c2333; }
+  p { color: #6b7385; font-size: 14px; margin-bottom: 22px; }
+  input {
+    width: 100%; padding: 14px 16px; font-size: 18px; text-align: center; letter-spacing: 2px;
+    border: 2px solid #e3e8f0; border-radius: 12px; font-family: inherit; outline: none;
+  }
+  input:focus { border-color: #2563eb; }
+  button {
+    width: 100%; margin-top: 14px; padding: 14px; font-size: 16px; font-weight: 700;
+    background: #2563eb; color: #fff; border: none; border-radius: 12px; cursor: pointer; font-family: inherit;
+  }
+  button:hover { filter: brightness(1.08); }
+  #err { color: #dc2626; font-size: 14px; margin-top: 12px; min-height: 20px; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">🏷️</div>
+    <h1>PriceWatch</h1>
+    <p>השוואת ומעקב מחירים · הקלידי את קוד הכניסה</p>
+    <input type="password" id="pin" placeholder="קוד כניסה" autofocus autocomplete="current-password">
+    <button id="go">כניסה</button>
+    <div id="err"></div>
+  </div>
+<script>
+  async function login() {
+    const pin = document.getElementById('pin').value.trim();
+    if (!pin) return;
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    });
+    if (res.ok) location.href = '/';
+    else document.getElementById('err').textContent = 'קוד שגוי — נסי שוב';
+  }
+  document.getElementById('go').addEventListener('click', login);
+  document.getElementById('pin').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+</body>
+</html>

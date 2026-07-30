@@ -1,0 +1,10 @@
+node_modules
+pricewatch.db
+server.log
+debug.log
+test-results
+playwright-report
+cloudflared.exe
+*.bat
+*.vbs
+.git

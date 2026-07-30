@@ -1,0 +1,14 @@
+{
+  "name": "PriceWatch — השוואת ומעקב מחירים",
+  "short_name": "PriceWatch",
+  "description": "השוואת מחירים ומעקב אוטומטי — מזון, פארם, אלקטרוניקה",
+  "start_url": "/",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "he",
+  "background_color": "#f4f6fa",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

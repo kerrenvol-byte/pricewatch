@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PriceWatch">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>PriceWatch — השוואת ומעקב מחירים</title>
+<style>
+  :root {
+    --bg: #f4f6fa; --card: #ffffff; --ink: #1c2333; --muted: #6b7385;
+    --accent: #2563eb; --accent-soft: #eff4ff; --green: #16a34a; --red: #dc2626;
+    --border: #e3e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  body { font-family: "Segoe UI", "Heebo", Arial, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+  header {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff;
+    padding: 18px 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 22px; font-weight: 700; }
+  header .sub { font-size: 13px; opacity: .85; }
+  /* ניווט: grid של 3 עמודות שוות — לעולם לא גולש מהמסך בשום רוחב */
+  nav {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 0 8px; position: sticky; top: 0; z-index: 5; max-width: 100%;
+  }
+  nav button {
+    border: none; background: none; padding: 14px 8px; font-size: 15px; font-weight: 600;
+    color: var(--muted); cursor: pointer; font-family: inherit;
+    min-height: 48px; min-width: 0; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    text-align: center; overflow-wrap: anywhere; line-height: 1.25;
+    /* הפס התחתון דרך box-shadow — לא משפיע על גובה/רוחב הפריסה */
+    box-shadow: inset 0 -3px 0 transparent;
+    transition: color .12s;
+  }
+  nav button.active { color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+  /* טקסט נגיש לקוראי מסך בלבד */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  .candicon {
+    width: 44px; height: 44px; background: var(--accent-soft); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .candicon.zap { background: #ede9fe; }
+  .secret-row { display: flex; gap: 6px; align-items: center; }
+  .secret-row input { flex: 1; min-width: 0; }
+  .toggle-secret {
+    flex-shrink: 0; min-width: 44px; min-height: 44px; border: 1.5px solid var(--border);
+    background: #fff; border-radius: 8px; cursor: pointer; font-size: 16px;
+  }
+  /* ירוק כהה — יחס ניגודיות מעל 4.5:1 על רקע לבן */
+  .secret-status { color: #15803d; font-size: 12.5px; font-weight: 600; margin-top: 4px; }
+  main { max-width: 980px; margin: 0 auto; padding: 22px 16px 60px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 16px; }
+  .searchbar { display: flex; gap: 8px; flex-wrap: wrap; }
+  .searchbar input[type=text] {
+    flex: 1; min-width: 220px; padding: 13px 16px; font-size: 16px; border: 2px solid var(--border);
+    border-radius: 10px; font-family: inherit; outline: none;
+  }
+  .searchbar input[type=text]:focus { border-color: var(--accent); }
+  .btn {
+    padding: 12px 22px; border: none; border-radius: 10px; background: var(--accent); color: #fff;
+    font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.secondary { background: var(--accent-soft); color: var(--accent); }
+  .btn.small { padding: 7px 14px; font-size: 13px; border-radius: 8px; }
+  /* אדום כהה יותר על רקע ורוד — יחס ניגודיות 4.5:1 לעמידה ב-WCAG AA */
+  .btn.danger { background: #fee2e2; color: #b31616; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .section-title { font-size: 17px; font-weight: 700; margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
+  .candidate { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; background: #fff; }
+  .candidate:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .candidate img { width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #fff; }
+  .candidate .meta { flex: 1; }
+  .candidate .name { font-weight: 600; font-size: 15px; }
+  .candidate .sub { color: var(--muted); font-size: 12.5px; }
+  .candidate .from { color: var(--green); font-weight: 700; white-space: nowrap; }
+  table.prices { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  table.prices th { text-align: right; padding: 9px 10px; color: var(--muted); font-size: 13px; border-bottom: 2px solid var(--border); }
+  table.prices td { padding: 10px; border-bottom: 1px solid var(--border); }
+  table.prices tr.best td { background: #f0fdf4; }
+  .price-val { font-weight: 700; white-space: nowrap; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .badge.online { background: #ede9fe; color: #7c3aed; }
+  .badge.store { background: #e0f2fe; color: #0369a1; }
+  .badge.sale { background: #fef3c7; color: #b45309; }
+  .badge.best { background: #dcfce7; color: var(--green); }
+  .product-card { display: flex; flex-direction: column; gap: 10px; }
+  .product-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .product-head img { width: 52px; height: 52px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--border); }
+  .product-head .grow { flex: 1; min-width: 200px; }
+  .product-head .pname { font-weight: 700; font-size: 16px; }
+  .product-head .pmeta { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .bigprice { font-size: 24px; font-weight: 800; color: var(--green); white-space: nowrap; }
+  .bigprice .at { display: block; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .controls select, .controls input[type=number] {
+    padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13.5px; background: #fff;
+  }
+  .controls input[type=number] { width: 90px; }
+  .sparkline { height: 46px; width: 100%; }
+  .trend-up { color: var(--red); } .trend-down { color: var(--green); }
+  .form-grid { display: grid; grid-template-columns: 180px 1fr; gap: 12px 14px; align-items: center; }
+  .form-grid label { font-weight: 600; font-size: 14px; }
+  .form-grid input, .form-grid select {
+    padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; width: 100%;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+  .settings-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.7; }
+  .settings-note a { color: var(--accent); }
+  #toast {
+    position: fixed; bottom: 24px; right: 50%; transform: translateX(50%); background: var(--ink); color: #fff;
+    padding: 12px 22px; border-radius: 10px; font-size: 14.5px; display: none; z-index: 99; max-width: 90vw;
+  }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid #cbd5e1; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty { text-align: center; color: var(--muted); padding: 40px 10px; font-size: 15px; }
+  .imgdrop {
+    border: 2px dashed var(--border); border-radius: 10px; padding: 10px 14px;
+    color: #55596b;  /* ניגודיות 4.5:1 מול רקע לבן ואפור בהיר */
+    background: #fff; font-family: inherit;
+    font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    min-height: 44px;
+  }
+  .imgdrop:hover { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    header { padding: 12px 14px; gap: 10px; }
+    header h1 { font-size: 17px; }
+    header .sub { font-size: 11.5px; }
+    header > div:first-child { font-size: 24px; }
+    nav { padding: 0 2px; }
+    nav button { padding: 10px 4px; font-size: 12.5px; flex-direction: column; gap: 2px; }
+    main { padding: 14px 10px 50px; }
+    .card { padding: 13px; border-radius: 12px; }
+    .searchbar { flex-direction: column; }
+    .searchbar input[type=text] { min-width: 0; width: 100%; font-size: 16px; }
+    .searchbar .btn { width: 100%; }
+    .imgdrop { width: 100%; justify-content: center; }
+    .candidate { padding: 9px; gap: 9px; flex-wrap: wrap; }
+    .candidate .name { font-size: 14px; }
+    .candidate .btn { width: 100%; padding: 10px; }  /* בנייד — כפתור ברוחב מלא מתחת לשם */
+    .candidate .from { font-size: 13.5px; }
+    /* בנייד: כל שורת מחיר הופכת לכרטיס, עם תווית לכל שדה — סדר קריאה תקין ב-RTL */
+    table.prices, table.prices tbody, table.prices tr, table.prices td { display: block; width: 100%; }
+    table.prices thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    table.prices tr {
+      border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; padding: 6px 10px; background: #fff;
+    }
+    table.prices tr.best { border-color: var(--green); background: #f0fdf4; }
+    table.prices td {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      padding: 5px 0; border-bottom: none; font-size: 13.5px; text-align: right;
+    }
+    table.prices td::before {
+      content: attr(data-label); color: var(--muted); font-size: 12px; font-weight: 600; flex-shrink: 0;
+    }
+    table.prices td:empty, table.prices td.addr-cell:empty { display: none; }
+    table.prices td[data-label="מחיר"] { font-size: 16px; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; }
+    .bigprice { font-size: 20px; }
+    .controls { gap: 6px; }
+    .controls select, .controls input[type=number] { font-size: 13px; padding: 8px 8px; flex: 1; min-width: 0; }
+    .controls .btn { flex: 1; }
+    .product-head img { width: 44px; height: 44px; }
+  }
+  @media (hover: none) {
+    .btn, .candidate, nav button { -webkit-tap-highlight-color: transparent; }
+    .btn { padding-top: 13px; padding-bottom: 13px; } /* מטרות מגע גדולות */
+  }
+</style>
+</head>
+<body>
+<header>
+  <div style="font-size:30px">🏷️</div>
+  <div>
+    <h1>PriceWatch — השוואת ומעקב מחירים</h1>
+    <div class="sub">מזון · פארם · אלקטרוניקה · סלולר · חשמל — כל הרשתות בישראל</div>
+  </div>
+</header>
+<nav aria-label="ניווט ראשי">
+ <div role="tablist" aria-label="מסכי האפליקציה" style="display:contents">
+  <button role="tab" id="tabbtn-search" aria-controls="tab-search" aria-selected="true" tabindex="0" data-tab="search" class="active">🔍 חיפוש והשוואה</button>
+  <button role="tab" id="tabbtn-tracked" aria-controls="tab-tracked" aria-selected="false" tabindex="-1" data-tab="tracked">📌 מוצרים במעקב <span id="trackedCount"></span></button>
+  <button role="tab" id="tabbtn-settings" aria-controls="tab-settings" aria-selected="false" tabindex="-1" data-tab="settings">⚙️ הגדרות</button>
+ </div>
+</nav>
+<main>
+  <!-- ============ חיפוש ============ -->
+  <section id="tab-search" role="tabpanel" aria-labelledby="tabbtn-search" tabindex="-1">
+    <div class="card">
+      <div class="searchbar">
+        <label class="sr-only" for="q">חיפוש מוצר לפי ברקוד, מק״ט או שם</label>
+        <input type="text" id="q" placeholder="הקלידי ברקוד, מק״ט או שם מוצר… (למשל: קוטג׳, iPhone 16, 7290004127329)" autofocus
+               enterkeyhint="search" autocomplete="off">
+        <button class="btn" type="button" id="btnSearch">חיפוש</button>
+        <button type="button" class="imgdrop" id="btnImgSearch" aria-describedby="searchHelp">📷 חיפוש בתמונה</button>
+        <input type="file" id="imgInput" accept="image/*" hidden>
+      </div>
+      <div class="hint" id="searchHelp">ברקוד מזהה מוצרי מזון/פארם במדויק · שם דגם מחפש גם באלקטרוניקה וחשמל · לחיפוש בתמונה — צלמי את הברקוד של המוצר</div>
+    </div>
+    <div id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="candidates" role="region" aria-label="תוצאות חיפוש"></div>
+    <div id="compareResults" role="region" aria-label="השוואת מחירים"></div>
+  </section>
+
+  <!-- ============ מעקב ============ -->
+  <section id="tab-tracked" role="tabpanel" aria-labelledby="tabbtn-tracked" tabindex="-1" hidden>
+    <div id="trackedList"></div>
+  </section>
+
+  <!-- ============ הגדרות ============ -->
+  <section id="tab-settings" role="tabpanel" aria-labelledby="tabbtn-settings" tabindex="-1" hidden>
+    <div class="card">
+      <h2 class="section-title">🔒 שינוי קוד הכניסה המשותף</h2>
+      <div class="form-grid">
+        <label for="s_pin_current">הקוד הנוכחי</label>
+        <div class="secret-row">
+          <input id="s_pin_current" type="password" autocomplete="current-password" placeholder="הקוד שבשימוש היום">
+          <button type="button" class="toggle-secret" data-target="s_pin_current" aria-pressed="false" aria-label="הצגת הערך">👁️</button>
+        </div>
+        <label for="s_pin_new">קוד חדש</label>
+        <div class="secret-row">
+          <input id="s_pin_new" type="password" autocomplete="new-password" placeholder="6 תווים לפחות">
+          <button type="button" class="toggle-secret" data-target="s_pin_new" aria-pressed="false" aria-label="הצגת הערך">👁️</button>
+        </div>
+        <label for="s_pin_confirm">אימות הקוד החדש</label>
+        <div class="secret-row">
+          <input id="s_pin_confirm" type="password" autocomplete="new-password" placeholder="שוב, לוודא שאין טעות">
+          <button type="button" class="toggle-secret" data-target="s_pin_confirm" aria-pressed="false" aria-label="הצגת הערך">👁️</button>
+        </div>
+      </div>
+      <div class="hint">⚠️ שינוי הקוד מנתק מיד את כל המכשירים המחוברים — כולל זה שאת עליו. תצטרכי להיכנס מחדש עם הקוד החדש.</div>
+      <div style="margin-top:12px"><button class="btn small danger" type="button" id="btnChangePin">שינוי הקוד</button></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">🏙️ אזור השוואת מחירי מזון</h2>
+      <div class="form-grid">
+        <label for="s_city">עיר / כתובת</label>
+        <input id="s_city" placeholder="למשל: תל אביב / חיפה / רחוב הרצל 1, נתניה">
+      </div>
+      <div class="hint">מחירי סופרמרקט משתנים בין סניפים — ההשוואה תציג חנויות באזור הזה + חנויות אונליין.</div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">📱 גישה מהטלפון הנייד</h2>
+      <div id="phoneAccess" class="hint">טוען…</div>
+      <div style="text-align:center;margin-top:12px">
+        <img id="qrImg" src="/api/qr" alt="קוד QR שמוביל לכתובת האתר" style="width:190px;max-width:100%;height:auto;border:1px solid var(--border);border-radius:10px;padding:8px;background:#fff">
+        <div class="hint">סורקים עם מצלמת הנייד → נפתח האתר → מקלידים את קוד הכניסה פעם אחת.<br>
+        אחר כך בתפריט הדפדפן: <b>"הוספה למסך הבית"</b> — ו-PriceWatch יופיע כאפליקציה 📲</div>
+      </div>
+      <div class="settings-note" id="localAccessHelp" hidden style="margin-top:10px">
+        <b>הרצה מקומית:</b> כדי לאפשר גישה ממכשירים אחרים ברשת הביתית יש לפתוח את הפורט בחומת האש של המחשב (ראי את קובץ ה-README של הפרויקט).
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">📧 התראות במייל (Gmail)</h2>
+      <div class="form-grid">
+        <label for="s_email_user">כתובת Gmail שולחת</label>
+        <input id="s_email_user" type="email" placeholder="you@gmail.com" dir="ltr" autocomplete="username">
+        <label for="s_email_app_password">סיסמת אפליקציה</label>
+        <div class="secret-row">
+          <input id="s_email_app_password" type="password" placeholder="לא הוגדר" dir="ltr" autocomplete="new-password">
+          <button type="button" class="toggle-secret" data-target="s_email_app_password" aria-pressed="false" aria-label="הצגת הערך">👁️</button>
+        </div>
+        <span></span><span class="secret-status" id="status_email_app_password"></span>
+        <label for="s_email_to">לשלוח אל (אופציונלי)</label>
+        <input id="s_email_to" type="email" placeholder="ברירת מחדל: לאותה כתובת" dir="ltr" autocomplete="off">
+      </div>
+      <div class="settings-note" style="margin-top:10px">
+        <b>איך יוצרים סיסמת אפליקציה?</b> נכנסים אל
+        <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">myaccount.google.com/apppasswords</a>
+        (דורש אימות דו-שלבי פעיל) → יוצרים סיסמה בשם "PriceWatch" → מדביקים כאן את 16 התווים. זו לא הסיסמה הרגילה שלך לגוגל.
+      </div>
+      <div style="margin-top:12px"><button class="btn small secondary" type="button" id="btnTestEmail">שליחת מייל בדיקה</button></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">💬 התראות ווטסאפ (אופציונלי, חינם)</h2>
+      <div class="form-grid">
+        <label for="s_whatsapp_phone">מספר נייד בינלאומי</label>
+        <input id="s_whatsapp_phone" type="tel" placeholder="972501234567" dir="ltr" autocomplete="off">
+        <label for="s_whatsapp_apikey">מפתח CallMeBot</label>
+        <div class="secret-row">
+          <input id="s_whatsapp_apikey" type="password" placeholder="לא הוגדר" dir="ltr" autocomplete="off">
+          <button type="button" class="toggle-secret" data-target="s_whatsapp_apikey" aria-pressed="false" aria-label="הצגת הערך">👁️</button>
+        </div>
+        <span></span><span class="secret-status" id="status_whatsapp_apikey"></span>
+      </div>
+      <div class="settings-note" style="margin-top:10px">
+        <b>הגדרה חד-פעמית (2 דקות):</b> שולחים בווטסאפ את ההודעה
+        <code dir="ltr">I allow callmebot to send me messages</code>
+        למספר <b dir="ltr">+34 621 331 709</b> → מקבלים בחזרה apikey → מדביקים כאן.
+        פרטים: <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank" rel="noopener noreferrer">callmebot.com</a>
+      </div>
+      <div style="margin-top:12px"><button class="btn small secondary" type="button" id="btnTestWa">שליחת הודעת בדיקה</button></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">🤖 חיפוש לפי תמונה (אופציונלי)</h2>
+      <div class="form-grid">
+        <label for="s_anthropic_api_key">מפתח Anthropic API</label>
+        <div class="secret-row">
+          <input id="s_anthropic_api_key" type="password" placeholder="לא הוגדר" dir="ltr" autocomplete="off">
+          <button type="button" class="toggle-secret" data-target="s_anthropic_api_key" aria-pressed="false" aria-label="הצגת הערך">👁️</button>
+        </div>
+        <span></span><span class="secret-status" id="status_anthropic_api_key"></span>
+      </div>
+      <div class="hint">מפתח מ-<a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> — כל זיהוי תמונה עולה אגורות בודדות.</div>
+    </div>
+
+    <button class="btn" type="button" id="btnSaveSettings">💾 שמירת הגדרות</button>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
