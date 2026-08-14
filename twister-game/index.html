@@ -188,12 +188,35 @@
 
   const speechSupported = 'speechSynthesis' in window;
   let voices = [];
-  function loadVoices() { voices = speechSynthesis.getVoices(); }
+
+  function hebrewVoice() {
+    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he'));
+  }
+
+  // מציג במכשיר עצמו אם נמצא קול עברי — כך אפשר לאבחן בעיות הקראה ישירות מהטלפון
+  function updateVoiceNote() {
+    if (!speechSupported) return;
+    const he = hebrewVoice();
+    if (he) {
+      note.textContent = `🔊 נמצא קול בעברית: ${he.name}`;
+    } else if (voices.length) {
+      note.textContent = '⚠️ לא נמצא קול בעברית במכשיר — ההקראה תישמע במבטא זר. בהגדרות ← נגישות ← תוכן מדובר ← קולות, הורידו קול עברית.';
+    } else {
+      note.textContent = 'ודאו שהעוצמה פתוחה ושמתג ההשתקה בצד המכשיר כבוי';
+    }
+  }
+
+  function loadVoices() {
+    voices = speechSynthesis.getVoices();
+    updateVoiceNote();
+  }
+
   if (speechSupported) {
     loadVoices();
     speechSynthesis.onvoiceschanged = loadVoices;
     // ב-iOS Safari הרשימה לפעמים חוזרת ריקה בהתחלה בלי אירוע onvoiceschanged
     setTimeout(loadVoices, 300);
+    setTimeout(loadVoices, 1200);
   } else {
     muteBtn.disabled = true;
     note.textContent = 'הדפדפן הזה לא תומך בהקראה קולית — ההוראות יוצגו על המסך בלבד';
@@ -210,16 +233,23 @@
 
   function speak(text) {
     if (!speechSupported || muted) return;
-    speechSynthesis.cancel();
-    currentUtterance = new SpeechSynthesisUtterance(text);
-    currentUtterance.lang = 'he-IL';
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'he-IL';
     const heVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he'));
-    if (heVoice) currentUtterance.voice = heVoice;
-    currentUtterance.rate = 0.95;
-    // ב-iOS Safari קריאה מיידית ל-speak() אחרי cancel() לפעמים "נבלעת" בשקט
-    setTimeout(() => {
-      if (currentUtterance) speechSynthesis.speak(currentUtterance);
-    }, 40);
+    if (heVoice) utter.voice = heVoice;
+    utter.rate = 0.95;
+    currentUtterance = utter;
+
+    if (speechSynthesis.speaking || speechSynthesis.pending) {
+      // צריך לקטוע הקראה קודמת; ב-iOS Safari speak() מיד אחרי cancel() לפעמים "נבלע" בשקט
+      speechSynthesis.cancel();
+      setTimeout(() => {
+        if (currentUtterance === utter) speechSynthesis.speak(utter);
+      }, 40);
+    } else {
+      // קריאה סינכרונית — שומרת על שרשרת מחוות המשתמש, שבלעדיה iOS חוסם את ההקראה הראשונה
+      speechSynthesis.speak(utter);
+    }
   }
 
   function pickInstruction() {
