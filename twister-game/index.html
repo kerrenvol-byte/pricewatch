@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="טוויסטר">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='50' height='50' fill='%23E8112D'/%3E%3Crect x='50' width='50' height='50' fill='%230057B8'/%3E%3Crect y='50' width='50' height='50' fill='%23FFD100'/%3E%3Crect x='50' y='50' width='50' height='50' fill='%2300A651'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='50' height='50' fill='%23E8112D'/%3E%3Crect x='50' width='50' height='50' fill='%230057B8'/%3E%3Crect y='50' width='50' height='50' fill='%23FFD100'/%3E%3Crect x='50' y='50' width='50' height='50' fill='%2300A651'/%3E%3C/svg%3E">
+<title>טוויסטר — מחולל הוראות קולי</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+  html, body {
+    height: 100%;
+  }
+  body {
+    font-family: "Heebo", "Segoe UI", Arial, sans-serif;
+    background: #111827;
+    color: #fff;
+    min-height: calc(var(--vh, 1vh) * 100);
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    overflow-y: auto;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 460px;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(16px, 3vh);
+    margin: auto;
+  }
+  header { text-align: center; }
+  h1 { font-size: clamp(20px, 6vw, 26px); }
+  .sub { color: #9ca3af; font-size: clamp(12px, 3.2vw, 14px); margin-top: 4px; }
+
+  .card {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: min(46vh, 380px);
+    border-radius: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #1f2937;
+    box-shadow: 0 20px 50px rgba(0,0,0,.45);
+    transition: background-color .25s ease;
+    text-align: center;
+    padding: 20px;
+  }
+  .card.idle { background: #1f2937; }
+  .card .limb {
+    font-size: clamp(34px, 14vw, 96px);
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .card .color {
+    font-size: clamp(18px, 6vw, 40px);
+    font-weight: 600;
+    opacity: .9;
+  }
+  .card .alt {
+    font-size: clamp(14px, 4vw, 22px);
+    font-weight: 600;
+    opacity: .72;
+    direction: ltr;
+  }
+  .card .alt:empty { display: none; }
+  .card.idle .limb { font-size: clamp(16px, 5vw, 26px); font-weight: 600; color: #9ca3af; }
+
+  .card.pop { animation: pop .35s ease; }
+  @keyframes pop { 0% { transform: scale(.94); } 55% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+  .bar {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.08);
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 999px;
+    background: #fff;
+  }
+  .bar-fill.running { animation: shrink var(--dur, 7s) linear forwards; }
+  @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+
+  .countdown { font-size: 14px; color: #9ca3af; min-height: 18px; }
+
+  .controls {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .btn {
+    flex: 1 1 auto;
+    min-width: 110px;
+    min-height: 44px;
+    padding: 16px 18px;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: inherit;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    color: #fff;
+    background: #374151;
+    touch-action: manipulation;
+  }
+  .btn:active { filter: brightness(.9); }
+  .btn.primary { background: #16a34a; flex: 1 1 100%; }
+  .btn.danger { background: #dc2626; }
+  .btn.ghost { background: transparent; border: 2px solid #374151; flex: 0 0 auto; min-width: 60px; }
+  .btn[hidden] { display: none; }
+
+  .note { font-size: 12px; color: #6b7280; text-align: center; }
+
+  .langbar {
+    display: flex;
+    gap: 6px;
+    padding: 5px;
+    background: rgba(255,255,255,.06);
+    border-radius: 12px;
+  }
+  .lang {
+    min-height: 36px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    color: #9ca3af;
+    background: transparent;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .lang[aria-pressed="true"] { background: #374151; color: #fff; }
+
+  .side {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(14px, 2.4vh);
+  }
+
+  /* בלנדסקייפ על טלפון הגובה הוא המשאב הנדיר — עוברים לשתי עמודות
+     כדי שכל הכפתורים יישארו על המסך בלי גלילה */
+  @media (orientation: landscape) and (max-height: 540px) {
+    .wrap { flex-direction: row; align-items: center; gap: 20px; max-width: 780px; }
+    header { display: none; }
+    .card {
+      flex: 0 0 auto;
+      width: auto;
+      height: min(84vh, 300px);
+      max-height: none;
+      border-radius: 22px;
+    }
+    .card .limb { font-size: clamp(26px, 8vh, 54px); }
+    .card .color { font-size: clamp(15px, 4.6vh, 30px); }
+    .card .alt { font-size: clamp(12px, 3.4vh, 20px); }
+    .side { flex: 1 1 auto; min-width: 0; gap: 10px; }
+    .btn { min-height: 42px; padding: 11px 16px; font-size: 15px; }
+    .note { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🎯 טוויסטר</h1>
+      <p class="sub">הוראה חדשה כל 7 שניות — צבע ויד או רגל</p>
+    </header>
+
+    <div id="card" class="card idle">
+      <div class="limb" id="limbText">לחצו התחלה כדי לשחק</div>
+      <div class="color" id="colorText"></div>
+      <div class="alt" id="altText"></div>
+    </div>
+
+    <div class="side">
+      <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+      <div class="countdown" id="countdown"></div>
+
+      <div class="langbar" role="group" aria-label="שפת ההקראה">
+        <button class="lang" data-lang="he" aria-pressed="true">עברית</button>
+        <button class="lang" data-lang="en" aria-pressed="false">English</button>
+        <button class="lang" data-lang="both" aria-pressed="false">עב + EN</button>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn" class="btn primary">▶️ התחלה</button>
+        <button id="pauseBtn" class="btn" hidden>⏸️ השהיה</button>
+        <button id="stopBtn" class="btn danger" hidden>⏹️ עצירה</button>
+        <button id="muteBtn" class="btn ghost" aria-pressed="false" title="השתקת קול">🔊</button>
+      </div>
+
+      <p class="note" id="note">ודאו שהעוצמה פתוחה כדי לשמוע את ההוראות</p>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const ROUND_SECONDS = 7;
+  const TICK_MS = 250; // דגימה תכופה מ-1s כדי שהספירה תדביק פער מיד אחרי חזרה מהרקע
+
+  const COLORS = [
+    { he: 'אדום', en: 'Red',    hex: '#E8112D', dark: false },
+    { he: 'כחול', en: 'Blue',   hex: '#0057B8', dark: false },
+    { he: 'צהוב', en: 'Yellow', hex: '#FFD100', dark: true  },
+    { he: 'ירוק', en: 'Green',  hex: '#00A651', dark: false },
+  ];
+  const LIMBS = [
+    { he: 'יד ימין',  en: 'Right hand' },
+    { he: 'יד שמאל',  en: 'Left hand'  },
+    { he: 'רגל ימין', en: 'Right foot' },
+    { he: 'רגל שמאל', en: 'Left foot'  },
+  ];
+
+  // he = עברית בלבד · en = אנגלית בלבד · both = עברית ואחריה אנגלית
+  let lang = 'he';
+  try { lang = localStorage.getItem('twister_lang') || 'he'; } catch (e) { /* localStorage חסום */ }
+  if (!['he', 'en', 'both'].includes(lang)) lang = 'he';
+
+  const IDLE_TEXT = { he: 'לחצו התחלה כדי לשחק', en: 'Tap start to play' };
+  const phrase = {
+    he: (limb, color) => `${limb.he} על ${color.he}`,
+    en: (limb, color) => `${limb.en} on ${color.en}`,
+  };
+
+  const card = document.getElementById('card');
+  const limbText = document.getElementById('limbText');
+  const colorText = document.getElementById('colorText');
+  const barFill = document.getElementById('barFill');
+  const countdownEl = document.getElementById('countdown');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const note = document.getElementById('note');
+  const altText = document.getElementById('altText');
+  const langBtns = Array.from(document.querySelectorAll('.lang'));
+
+  // מתאים לגודל המסך האמיתי ב-Safari לאייפון, שם 100vh לא מתחשב בסרגל הכתובת
+  function setViewportHeight() {
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+  }
+  setViewportHeight();
+  window.addEventListener('resize', setViewportHeight);
+  window.addEventListener('orientationchange', setViewportHeight);
+
+  // בדיקת אמת ולא 'in window': יש דפדפנים שבהם המאפיין קיים אך ערכו undefined
+  const speechSupported = !!window.speechSynthesis && typeof window.SpeechSynthesisUtterance === 'function';
+  let voices = [];
+
+  const VOICE_PREFIX = { he: 'he', en: 'en' };
+  function voiceFor(code) {
+    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith(VOICE_PREFIX[code]));
+  }
+
+  // שפות שצריך להקריא בפועל לפי הבחירה הנוכחית
+  function activeLangs() {
+    return lang === 'both' ? ['he', 'en'] : [lang];
+  }
+
+  // מציג במכשיר עצמו אילו קולות נמצאו — כך אפשר לאבחן בעיות הקראה ישירות מהטלפון
+  function updateVoiceNote() {
+    if (!speechSupported) return;
+    if (!voices.length) {
+      note.textContent = 'ודאו שהעוצמה פתוחה ושמתג ההשתקה בצד המכשיר כבוי';
+      return;
+    }
+    const LABEL = { he: 'עברית', en: 'אנגלית' };
+    const missing = activeLangs().filter(c => !voiceFor(c));
+    if (missing.length) {
+      const names = missing.map(c => LABEL[c]).join(' ו');
+      note.textContent = `⚠️ לא נמצא קול ב${names} במכשיר — ההקראה תישמע במבטא זר. בהגדרות ← נגישות ← תוכן מדובר ← קולות אפשר להוריד קול.`;
+    } else {
+      note.textContent = '🔊 ' + activeLangs().map(c => `${LABEL[c]}: ${voiceFor(c).name}`).join(' · ');
+    }
+  }
+
+  function loadVoices() {
+    voices = speechSynthesis.getVoices();
+    updateVoiceNote();
+  }
+
+  if (speechSupported) {
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+    // ב-iOS Safari הרשימה לפעמים חוזרת ריקה בהתחלה בלי אירוע onvoiceschanged
+    setTimeout(loadVoices, 300);
+    setTimeout(loadVoices, 1200);
+  } else {
+    muteBtn.disabled = true;
+    note.textContent = 'הדפדפן הזה לא תומך בהקראה קולית — ההוראות יוצגו על המסך בלבד';
+  }
+
+  let running = false;
+  let paused = false;
+  let muted = false;
+  let roundEndsAt = 0;
+  let pausedAt = 0;
+  let tickHandle = null;
+  let last = null;
+  let wakeLock = null;
+  let pending = null; // מוחזק במשתנה חיצוני כדי שה-GC לא יאסוף את ההקראות לפני שנשמעו (תקלה ידועה ב-Safari)
+
+  const BCP47 = { he: 'he-IL', en: 'en-US' };
+
+  // מקריא רצף (בעברית, באנגלית, או בשתיהן ברצף) בקריאה אחת
+  function speakSequence(items) {
+    if (!speechSupported || muted || !items.length) return;
+    const utterances = items.map(({ text, code }) => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = BCP47[code];
+      const v = voiceFor(code);
+      if (v) u.voice = v;
+      u.rate = 0.95;
+      return u;
+    });
+    pending = utterances;
+
+    const queueAll = () => {
+      if (pending !== utterances) return; // בוטל בינתיים (עצירה / השהיה / השתקה)
+      utterances.forEach(u => speechSynthesis.speak(u));
+    };
+
+    if (speechSynthesis.speaking || speechSynthesis.pending) {
+      // צריך לקטוע הקראה קודמת; ב-iOS Safari speak() מיד אחרי cancel() לפעמים "נבלע" בשקט
+      speechSynthesis.cancel();
+      setTimeout(queueAll, 40);
+    } else {
+      // קריאה סינכרונית — שומרת על שרשרת מחוות המשתמש, שבלעדיה iOS חוסם את ההקראה הראשונה
+      queueAll();
+    }
+  }
+
+  function speakInstruction(limb, color) {
+    speakSequence(activeLangs().map(code => ({ text: phrase[code](limb, color), code })));
+  }
+
+  function pickInstruction() {
+    let color, limb;
+    do {
+      color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      limb = LIMBS[Math.floor(Math.random() * LIMBS.length)];
+    } while (last && color.he === last.color.he && limb.he === last.limb.he);
+    last = { color, limb };
+    return last;
+  }
+
+  function restartBar() {
+    barFill.classList.remove('running');
+    barFill.style.animation = 'none';
+    barFill.style.width = '100%';
+    // force reflow so the animation restarts cleanly
+    void barFill.offsetWidth;
+    barFill.style.setProperty('--dur', ROUND_SECONDS + 's');
+    barFill.style.animation = '';
+    barFill.classList.add('running');
+  }
+
+  // בשפה אחת מוצג הטקסט הגדול בלבד; ב"עב + EN" נוספת שורת האנגלית מתחת
+  function renderInstruction(limb, color) {
+    const primary = lang === 'en' ? 'en' : 'he';
+    limbText.textContent = limb[primary];
+    colorText.textContent = color[primary];
+    altText.textContent = lang === 'both' ? phrase.en(limb, color) : '';
+    const ink = color.dark ? '#1c2333' : '#ffffff';
+    limbText.style.color = colorText.style.color = altText.style.color = ink;
+  }
+
+  function newInstruction() {
+    const { color, limb } = pickInstruction();
+    card.classList.remove('idle');
+    renderInstruction(limb, color);
+    card.style.background = color.hex;
+    card.classList.remove('pop');
+    void card.offsetWidth;
+    card.classList.add('pop');
+    if (navigator.vibrate) navigator.vibrate(60);
+    speakInstruction(limb, color);
+    roundEndsAt = Date.now() + ROUND_SECONDS * 1000;
+    countdownEl.textContent = ROUND_SECONDS;
+    restartBar();
+  }
+
+  // הספירה נשענת על חותמת זמן ולא על צבירת טיקים: ב-iOS הטיימרים מוקפאים
+  // כשספארי יורד לרקע או שהמסך ננעל, וספירה מצטברת הייתה "מאבדת" את הזמן הזה
+  function tick() {
+    const leftMs = roundEndsAt - Date.now();
+    if (leftMs <= 0) { newInstruction(); return; }
+    const secs = Math.ceil(leftMs / 1000);
+    if (countdownEl.textContent !== String(secs)) countdownEl.textContent = secs;
+  }
+
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+    } catch (e) { /* לא קריטי אם נכשל */ }
+  }
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  }
+
+  function updateButtons() {
+    startBtn.hidden = running;
+    pauseBtn.hidden = !running;
+    stopBtn.hidden = !running;
+    pauseBtn.textContent = paused ? '▶️ המשך' : '⏸️ השהיה';
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    paused = false;
+    newInstruction();
+    tickHandle = setInterval(tick, TICK_MS);
+    requestWakeLock();
+    updateButtons();
+  }
+
+  function togglePause() {
+    if (!running) return;
+    paused = !paused;
+    if (paused) {
+      clearInterval(tickHandle);
+      tickHandle = null;
+      pausedAt = Date.now();
+      barFill.style.animationPlayState = 'paused';
+      pending = null;
+      if (speechSupported) speechSynthesis.cancel();
+    } else {
+      // דוחפים את סוף הסבב קדימה במשך ההשהיה, כדי שהמשך יימשך מהשנייה שבה עצרנו
+      roundEndsAt += Date.now() - pausedAt;
+      tickHandle = setInterval(tick, TICK_MS);
+      barFill.style.animationPlayState = 'running';
+    }
+    updateButtons();
+  }
+
+  function stop() {
+    running = false;
+    paused = false;
+    clearInterval(tickHandle);
+    tickHandle = null;
+    last = null;
+    roundEndsAt = 0;
+    countdownEl.textContent = '';
+    card.classList.add('idle');
+    card.classList.remove('pop');
+    card.style.background = '';
+    limbText.style.color = colorText.style.color = altText.style.color = '';
+    limbText.textContent = IDLE_TEXT[lang === 'en' ? 'en' : 'he'];
+    colorText.textContent = '';
+    altText.textContent = '';
+    barFill.classList.remove('running');
+    barFill.style.animation = 'none';
+    barFill.style.width = '100%';
+    pending = null;
+    if (speechSupported) speechSynthesis.cancel();
+    releaseWakeLock();
+    updateButtons();
+  }
+
+  function toggleMute() {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.setAttribute('aria-pressed', String(muted));
+    if (muted && speechSupported) {
+      pending = null;
+      speechSynthesis.cancel();
+    }
+  }
+
+  function setLang(next) {
+    if (lang === next) return;
+    lang = next;
+    try { localStorage.setItem('twister_lang', lang); } catch (e) { /* localStorage חסום */ }
+    langBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    updateVoiceNote();
+    // מציג מחדש את ההוראה הנוכחית בשפה החדשה, בלי לאפס את הטיימר
+    if (running && last) renderInstruction(last.limb, last.color);
+    else if (!running) limbText.textContent = IDLE_TEXT[lang === 'en' ? 'en' : 'he'];
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !running || paused) return;
+    requestWakeLock();
+    // ב-iOS מנוע ההקראה חוזר לפעמים במצב "מושהה" אחרי שהדף ירד לרקע
+    if (speechSupported && !muted) { try { speechSynthesis.resume(); } catch (e) { /* לא קריטי */ } }
+    tick(); // מדביק מיד את הזמן שחלף בזמן שהטיימר היה מוקפא
+  });
+
+  startBtn.addEventListener('click', start);
+  pauseBtn.addEventListener('click', togglePause);
+  stopBtn.addEventListener('click', stop);
+  muteBtn.addEventListener('click', toggleMute);
+  langBtns.forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+  // מיישר את המצב ההתחלתי לשפה שנשמרה מהפעם הקודמת
+  langBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  limbText.textContent = IDLE_TEXT[lang === 'en' ? 'en' : 'he'];
+})();
+</script>
+</body>
+</html>
