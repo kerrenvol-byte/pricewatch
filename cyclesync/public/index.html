@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="theme-color" content="#fff5f8" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="CycleSync" />
+<title>CycleSync</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="topbar-title">
+      <span class="topbar-logo">🌸</span>
+      <span>CycleSync</span>
+    </div>
+    <div class="topbar-date" id="topbarDate"></div>
+  </header>
+
+  <main id="views">
+
+    <!-- ===== מסך היום ===== -->
+    <section id="view-today" class="view">
+
+      <div id="onboarding" class="card onboarding hidden">
+        <div class="onboarding-emoji">🌷</div>
+        <h2>בואי נתחיל לעקוב</h2>
+        <p class="muted">מתי התחילה הוסת האחרונה שלך?</p>
+        <input type="date" id="onboardingDate" class="date-input" />
+        <button id="onboardingStart" class="btn btn-primary btn-block">התחילי לעקוב</button>
+        <button id="onboardingImport" class="btn btn-ghost btn-block">או ייבאי היסטוריה מ-Apple Health ⟵</button>
+      </div>
+
+      <div id="todayContent" class="hidden">
+
+        <div class="card ring-card">
+          <div class="cycle-ring" id="cycleRing">
+            <div class="ring-center">
+              <div class="ring-day" id="ringDay">–</div>
+              <div class="ring-total" id="ringTotal"></div>
+              <div class="ring-phase" id="ringPhase"></div>
+            </div>
+          </div>
+          <div class="prediction" id="predictionText"></div>
+        </div>
+
+        <button id="periodToggle" class="btn btn-period">
+          <span id="periodToggleIcon">🩸</span>
+          <span id="periodToggleLabel">היום יום וסת?</span>
+        </button>
+
+        <div class="card guidance-card" id="guidanceCard">
+          <h3 id="guidancePhaseTitle"></h3>
+          <div class="guidance-row"><span class="guidance-label">⚡ אנרגיה</span><span id="guidanceEnergy"></span></div>
+          <div class="guidance-row"><span class="guidance-label">🍽️ תיאבון</span><span id="guidanceAppetite"></span></div>
+          <div class="guidance-row"><span class="guidance-label">💭 מצב רוח</span><span id="guidanceMood"></span></div>
+          <ul class="tips" id="guidanceTips"></ul>
+        </div>
+
+        <div class="card feedback-card">
+          <h3>איך את מרגישה היום?</h3>
+
+          <div class="feedback-block">
+            <div class="feedback-label">מצב רוח</div>
+            <div class="picker" data-metric="mood" data-icons="😢,🙁,😐,🙂,😄"></div>
+          </div>
+
+          <div class="feedback-block">
+            <div class="feedback-label">אנרגיה</div>
+            <div class="picker" data-metric="energy" data-icons="😴,😪,🙂,💪,⚡"></div>
+          </div>
+
+          <div class="feedback-block">
+            <div class="feedback-label">תיאבון</div>
+            <div class="picker" data-metric="appetite" data-icons="🚫,🥄,🍽️,😋,🍫"></div>
+          </div>
+
+          <button class="note-toggle" id="noteToggle">+ הוסיפי הערה</button>
+          <textarea id="noteInput" class="note-input hidden" placeholder="איך היה היום? תסמינים, מחשבות, כל דבר..."></textarea>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== מסך יומן ===== -->
+    <section id="view-calendar" class="view hidden">
+      <div class="card">
+        <div class="month-nav">
+          <button id="prevMonth" class="icon-btn">›</button>
+          <div id="monthLabel" class="month-label"></div>
+          <button id="nextMonth" class="icon-btn">‹</button>
+        </div>
+        <div class="weekday-row">
+          <span>א</span><span>ב</span><span>ג</span><span>ד</span><span>ה</span><span>ו</span><span>ש</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#d6336c"></span>וסת</div>
+          <div class="legend-item"><span class="legend-dot legend-dot-outline" style="border-color:#d6336c"></span>וסת צפויה</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#d69e00"></span>חלון פורייה</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== מסך תובנות ===== -->
+    <section id="view-insights" class="view hidden">
+
+      <div class="card">
+        <h3>מגמות אחרונות</h3>
+        <p class="muted small">מצב רוח, אנרגיה ותיאבון ב-30 הימים האחרונים</p>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+
+      <div class="card" id="patternsCard">
+        <h3>הדפוסים האישיים שלך</h3>
+        <p class="muted small">ממוצע לפי יום במחזור, מתוך כל מה שתיעדת</p>
+        <div id="patternsEmpty" class="empty-state hidden">
+          <p>עוד קצת... תעדי כמה מחזורים וכאן יופיעו הדפוסים האישיים שלך 🌱</p>
+        </div>
+        <div class="chart-wrap" id="patternsChartWrap"><canvas id="patternsChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>אורך המחזורים שלך</h3>
+        <div class="chart-wrap"><canvas id="lengthChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>מדריך שלבי המחזור</h3>
+        <div class="phase-guide" id="phaseGuide"></div>
+      </div>
+
+    </section>
+
+    <!-- ===== מסך היסטוריה ===== -->
+    <section id="view-history" class="view hidden">
+
+      <div class="card stats-card" id="statsCard"></div>
+
+      <div class="card">
+        <h3>מחזורים קודמים</h3>
+        <div id="cyclesList" class="cycles-list"></div>
+      </div>
+
+      <div class="card">
+        <h3>ייבוא היסטוריה</h3>
+        <p class="muted small">ניתן לייבא ימי וסת עבר מקובץ הייצוא של אפליקציית הבריאות של אפל (Health app ⟵ פרופיל ⟵ ייצוא כל הנתונים).</p>
+        <input type="file" id="healthFileInput" accept=".xml,.zip,application/zip,text/xml" class="hidden" />
+        <button id="healthImportBtn" class="btn btn-secondary btn-block">בחרי קובץ ייצוא</button>
+        <div id="importStatus" class="import-status hidden"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="today"><span class="nav-icon">🏠</span><span>היום</span></button>
+    <button class="nav-btn" data-view="calendar"><span class="nav-icon">📅</span><span>יומן</span></button>
+    <button class="nav-btn" data-view="insights"><span class="nav-icon">📊</span><span>תובנות</span></button>
+    <button class="nav-btn" data-view="history"><span class="nav-icon">⏳</span><span>היסטוריה</span></button>
+  </nav>
+
+</div>
+
+<!-- מודל יום בלוח שנה -->
+<div id="dayModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="dayModalDate"></span>
+      <button id="dayModalClose" class="icon-btn">✕</button>
+    </div>
+    <button id="dayModalPeriodToggle" class="btn btn-period">
+      <span id="dayModalPeriodIcon">🩸</span>
+      <span id="dayModalPeriodLabel">יום וסת</span>
+    </button>
+    <div class="feedback-block">
+      <div class="feedback-label">מצב רוח</div>
+      <div class="picker" data-metric="mood" data-icons="😢,🙁,😐,🙂,😄" id="modalMoodPicker"></div>
+    </div>
+    <div class="feedback-block">
+      <div class="feedback-label">אנרגיה</div>
+      <div class="picker" data-metric="energy" data-icons="😴,😪,🙂,💪,⚡" id="modalEnergyPicker"></div>
+    </div>
+    <div class="feedback-block">
+      <div class="feedback-label">תיאבון</div>
+      <div class="picker" data-metric="appetite" data-icons="🚫,🥄,🍽️,😋,🍫" id="modalAppetitePicker"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

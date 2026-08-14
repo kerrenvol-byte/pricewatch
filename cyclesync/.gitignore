@@ -1,0 +1,5 @@
+node_modules/
+
+# מסד הנתונים מכיל מידע אישי רגיש — לעולם לא נכנס לגיט
+cyclesync.db
+cyclesync.db-journal
