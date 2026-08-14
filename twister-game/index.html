@@ -219,6 +219,7 @@
 <script>
 (() => {
   const ROUND_SECONDS = 7;
+  const TICK_MS = 250; // דגימה תכופה מ-1s כדי שהספירה תדביק פער מיד אחרי חזרה מהרקע
 
   const COLORS = [
     { he: 'אדום', en: 'Red',    hex: '#E8112D', dark: false },
@@ -265,7 +266,8 @@
   window.addEventListener('resize', setViewportHeight);
   window.addEventListener('orientationchange', setViewportHeight);
 
-  const speechSupported = 'speechSynthesis' in window;
+  // בדיקת אמת ולא 'in window': יש דפדפנים שבהם המאפיין קיים אך ערכו undefined
+  const speechSupported = !!window.speechSynthesis && typeof window.SpeechSynthesisUtterance === 'function';
   let voices = [];
 
   const VOICE_PREFIX = { he: 'he', en: 'en' };
@@ -314,7 +316,8 @@
   let running = false;
   let paused = false;
   let muted = false;
-  let remaining = ROUND_SECONDS;
+  let roundEndsAt = 0;
+  let pausedAt = 0;
   let tickHandle = null;
   let last = null;
   let wakeLock = null;
@@ -395,18 +398,18 @@
     card.classList.add('pop');
     if (navigator.vibrate) navigator.vibrate(60);
     speakInstruction(limb, color);
-    remaining = ROUND_SECONDS;
-    countdownEl.textContent = remaining;
+    roundEndsAt = Date.now() + ROUND_SECONDS * 1000;
+    countdownEl.textContent = ROUND_SECONDS;
     restartBar();
   }
 
-  function secondTick() {
-    remaining -= 1;
-    if (remaining <= 0) {
-      newInstruction();
-    } else {
-      countdownEl.textContent = remaining;
-    }
+  // הספירה נשענת על חותמת זמן ולא על צבירת טיקים: ב-iOS הטיימרים מוקפאים
+  // כשספארי יורד לרקע או שהמסך ננעל, וספירה מצטברת הייתה "מאבדת" את הזמן הזה
+  function tick() {
+    const leftMs = roundEndsAt - Date.now();
+    if (leftMs <= 0) { newInstruction(); return; }
+    const secs = Math.ceil(leftMs / 1000);
+    if (countdownEl.textContent !== String(secs)) countdownEl.textContent = secs;
   }
 
   async function requestWakeLock() {
@@ -430,7 +433,7 @@
     running = true;
     paused = false;
     newInstruction();
-    tickHandle = setInterval(secondTick, 1000);
+    tickHandle = setInterval(tick, TICK_MS);
     requestWakeLock();
     updateButtons();
   }
@@ -441,11 +444,14 @@
     if (paused) {
       clearInterval(tickHandle);
       tickHandle = null;
+      pausedAt = Date.now();
       barFill.style.animationPlayState = 'paused';
       pending = null;
-      speechSynthesis.cancel();
+      if (speechSupported) speechSynthesis.cancel();
     } else {
-      tickHandle = setInterval(secondTick, 1000);
+      // דוחפים את סוף הסבב קדימה במשך ההשהיה, כדי שהמשך יימשך מהשנייה שבה עצרנו
+      roundEndsAt += Date.now() - pausedAt;
+      tickHandle = setInterval(tick, TICK_MS);
       barFill.style.animationPlayState = 'running';
     }
     updateButtons();
@@ -457,7 +463,7 @@
     clearInterval(tickHandle);
     tickHandle = null;
     last = null;
-    remaining = ROUND_SECONDS;
+    roundEndsAt = 0;
     countdownEl.textContent = '';
     card.classList.add('idle');
     card.classList.remove('pop');
@@ -497,7 +503,11 @@
   }
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && running && !paused) requestWakeLock();
+    if (document.visibilityState !== 'visible' || !running || paused) return;
+    requestWakeLock();
+    // ב-iOS מנוע ההקראה חוזר לפעמים במצב "מושהה" אחרי שהדף ירד לרקע
+    if (speechSupported && !muted) { try { speechSynthesis.resume(); } catch (e) { /* לא קריטי */ } }
+    tick(); // מדביק מיד את הזמן שחלף בזמן שהטיימר היה מוקפא
   });
 
   startBtn.addEventListener('click', start);
