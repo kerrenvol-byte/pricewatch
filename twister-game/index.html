@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>טוויסטר — מחולל הוראות קולי</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    overscroll-behavior: none;
+  }
+  body {
+    font-family: "Heebo", "Segoe UI", Arial, sans-serif;
+    background: #111827;
+    color: #fff;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    user-select: none;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  header { text-align: center; }
+  h1 { font-size: 26px; }
+  .sub { color: #9ca3af; font-size: 14px; margin-top: 4px; }
+
+  .card {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: 46vh;
+    border-radius: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #1f2937;
+    box-shadow: 0 20px 50px rgba(0,0,0,.45);
+    transition: background-color .25s ease;
+    text-align: center;
+    padding: 20px;
+  }
+  .card.idle { background: #1f2937; }
+  .card .limb {
+    font-size: 15vw;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .card .color {
+    font-size: 6.5vw;
+    font-weight: 600;
+    opacity: .9;
+  }
+  .card.idle .limb { font-size: 6.5vw; font-weight: 600; color: #9ca3af; }
+
+  .card.pop { animation: pop .35s ease; }
+  @keyframes pop { 0% { transform: scale(.94); } 55% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+  .bar {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.08);
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 999px;
+    background: #fff;
+  }
+  .bar-fill.running { animation: shrink var(--dur, 7s) linear forwards; }
+  @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+
+  .countdown { font-size: 14px; color: #9ca3af; min-height: 18px; }
+
+  .controls {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .btn {
+    flex: 1 1 auto;
+    min-width: 110px;
+    padding: 16px 18px;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: inherit;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    color: #fff;
+    background: #374151;
+  }
+  .btn:active { filter: brightness(.9); }
+  .btn.primary { background: #16a34a; flex: 1 1 100%; }
+  .btn.danger { background: #dc2626; }
+  .btn.ghost { background: transparent; border: 2px solid #374151; flex: 0 0 auto; min-width: 60px; }
+  .btn[hidden] { display: none; }
+
+  .note { font-size: 12px; color: #6b7280; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🎯 טוויסטר</h1>
+      <p class="sub">הוראה חדשה כל 7 שניות — צבע ויד או רגל</p>
+    </header>
+
+    <div id="card" class="card idle">
+      <div class="limb" id="limbText">לחצו התחלה כדי לשחק</div>
+      <div class="color" id="colorText"></div>
+    </div>
+
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <div class="countdown" id="countdown"></div>
+
+    <div class="controls">
+      <button id="startBtn" class="btn primary">▶️ התחלה</button>
+      <button id="pauseBtn" class="btn" hidden>⏸️ השהיה</button>
+      <button id="stopBtn" class="btn danger" hidden>⏹️ עצירה</button>
+      <button id="muteBtn" class="btn ghost" aria-pressed="false" title="השתקת קול">🔊</button>
+    </div>
+
+    <p class="note" id="note">ודאו שהעוצמה פתוחה כדי לשמוע את ההוראות</p>
+  </div>
+
+<script>
+(() => {
+  const ROUND_SECONDS = 7;
+
+  const COLORS = [
+    { name: 'אדום', hex: '#E8112D', dark: false },
+    { name: 'כחול', hex: '#0057B8', dark: false },
+    { name: 'צהוב', hex: '#FFD100', dark: true },
+    { name: 'ירוק', hex: '#00A651', dark: false },
+  ];
+  const LIMBS = [
+    { part: 'יד',  side: 'ימין'  },
+    { part: 'יד',  side: 'שמאל'  },
+    { part: 'רגל', side: 'ימין'  },
+    { part: 'רגל', side: 'שמאל'  },
+  ];
+
+  const card = document.getElementById('card');
+  const limbText = document.getElementById('limbText');
+  const colorText = document.getElementById('colorText');
+  const barFill = document.getElementById('barFill');
+  const countdownEl = document.getElementById('countdown');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const note = document.getElementById('note');
+
+  const speechSupported = 'speechSynthesis' in window;
+  let voices = [];
+  function loadVoices() { voices = speechSynthesis.getVoices(); }
+  if (speechSupported) {
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  } else {
+    muteBtn.disabled = true;
+    note.textContent = 'הדפדפן הזה לא תומך בהקראה קולית — ההוראות יוצגו על המסך בלבד';
+  }
+
+  let running = false;
+  let paused = false;
+  let muted = false;
+  let remaining = ROUND_SECONDS;
+  let tickHandle = null;
+  let last = null;
+  let wakeLock = null;
+
+  function speak(text) {
+    if (!speechSupported || muted) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'he-IL';
+    const heVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he'));
+    if (heVoice) u.voice = heVoice;
+    u.rate = 0.95;
+    speechSynthesis.speak(u);
+  }
+
+  function pickInstruction() {
+    let color, limb;
+    do {
+      color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      limb = LIMBS[Math.floor(Math.random() * LIMBS.length)];
+    } while (last && color.name === last.color.name && limb.part === last.limb.part && limb.side === last.limb.side);
+    last = { color, limb };
+    return last;
+  }
+
+  function restartBar() {
+    barFill.classList.remove('running');
+    barFill.style.animation = 'none';
+    barFill.style.width = '100%';
+    // force reflow so the animation restarts cleanly
+    void barFill.offsetWidth;
+    barFill.style.setProperty('--dur', ROUND_SECONDS + 's');
+    barFill.style.animation = '';
+    barFill.classList.add('running');
+  }
+
+  function newInstruction() {
+    const { color, limb } = pickInstruction();
+    card.classList.remove('idle');
+    limbText.textContent = `${limb.part} ${limb.side}`;
+    colorText.textContent = color.name;
+    card.style.background = color.hex;
+    limbText.style.color = colorText.style.color = color.dark ? '#1c2333' : '#ffffff';
+    card.classList.remove('pop');
+    void card.offsetWidth;
+    card.classList.add('pop');
+    if (navigator.vibrate) navigator.vibrate(60);
+    speak(`${limb.part} ${limb.side} על ${color.name}`);
+    remaining = ROUND_SECONDS;
+    countdownEl.textContent = remaining;
+    restartBar();
+  }
+
+  function secondTick() {
+    remaining -= 1;
+    if (remaining <= 0) {
+      newInstruction();
+    } else {
+      countdownEl.textContent = remaining;
+    }
+  }
+
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+    } catch (e) { /* לא קריטי אם נכשל */ }
+  }
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  }
+
+  function updateButtons() {
+    startBtn.hidden = running;
+    pauseBtn.hidden = !running;
+    stopBtn.hidden = !running;
+    pauseBtn.textContent = paused ? '▶️ המשך' : '⏸️ השהיה';
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    paused = false;
+    newInstruction();
+    tickHandle = setInterval(secondTick, 1000);
+    requestWakeLock();
+    updateButtons();
+  }
+
+  function togglePause() {
+    if (!running) return;
+    paused = !paused;
+    if (paused) {
+      clearInterval(tickHandle);
+      tickHandle = null;
+      barFill.style.animationPlayState = 'paused';
+      speechSynthesis.cancel();
+    } else {
+      tickHandle = setInterval(secondTick, 1000);
+      barFill.style.animationPlayState = 'running';
+    }
+    updateButtons();
+  }
+
+  function stop() {
+    running = false;
+    paused = false;
+    clearInterval(tickHandle);
+    tickHandle = null;
+    last = null;
+    remaining = ROUND_SECONDS;
+    countdownEl.textContent = '';
+    card.classList.add('idle');
+    card.classList.remove('pop');
+    card.style.background = '';
+    limbText.style.color = colorText.style.color = '';
+    limbText.textContent = 'לחצו התחלה כדי לשחק';
+    colorText.textContent = '';
+    barFill.classList.remove('running');
+    barFill.style.animation = 'none';
+    barFill.style.width = '100%';
+    if (speechSupported) speechSynthesis.cancel();
+    releaseWakeLock();
+    updateButtons();
+  }
+
+  function toggleMute() {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    muteBtn.setAttribute('aria-pressed', String(muted));
+    if (muted && speechSupported) speechSynthesis.cancel();
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && running && !paused) requestWakeLock();
+  });
+
+  startBtn.addEventListener('click', start);
+  pauseBtn.addEventListener('click', togglePause);
+  stopBtn.addEventListener('click', stop);
+  muteBtn.addEventListener('click', toggleMute);
+})();
+</script>
+</body>
+</html>
