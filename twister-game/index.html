@@ -4,40 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="טוויסטר">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='50' height='50' fill='%23E8112D'/%3E%3Crect x='50' width='50' height='50' fill='%230057B8'/%3E%3Crect y='50' width='50' height='50' fill='%23FFD100'/%3E%3Crect x='50' y='50' width='50' height='50' fill='%2300A651'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='50' height='50' fill='%23E8112D'/%3E%3Crect x='50' width='50' height='50' fill='%230057B8'/%3E%3Crect y='50' width='50' height='50' fill='%23FFD100'/%3E%3Crect x='50' y='50' width='50' height='50' fill='%2300A651'/%3E%3C/svg%3E">
 <title>טוויסטר — מחולל הוראות קולי</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
   html, body {
     height: 100%;
-    overscroll-behavior: none;
   }
   body {
     font-family: "Heebo", "Segoe UI", Arial, sans-serif;
     background: #111827;
     color: #fff;
+    min-height: calc(var(--vh, 1vh) * 100);
     min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    overflow-y: auto;
+    -webkit-user-select: none;
     user-select: none;
   }
   .wrap {
     width: 100%;
     max-width: 460px;
+    max-height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: min(16px, 3vh);
+    margin: auto;
   }
   header { text-align: center; }
-  h1 { font-size: 26px; }
-  .sub { color: #9ca3af; font-size: 14px; margin-top: 4px; }
+  h1 { font-size: clamp(20px, 6vw, 26px); }
+  .sub { color: #9ca3af; font-size: clamp(12px, 3.2vw, 14px); margin-top: 4px; }
 
   .card {
     width: 100%;
     aspect-ratio: 1 / 1;
-    max-height: 46vh;
+    max-height: min(46vh, 380px);
     border-radius: 28px;
     display: flex;
     flex-direction: column;
@@ -52,16 +62,16 @@
   }
   .card.idle { background: #1f2937; }
   .card .limb {
-    font-size: 15vw;
+    font-size: clamp(34px, 14vw, 96px);
     font-weight: 800;
     line-height: 1.1;
   }
   .card .color {
-    font-size: 6.5vw;
+    font-size: clamp(18px, 6vw, 40px);
     font-weight: 600;
     opacity: .9;
   }
-  .card.idle .limb { font-size: 6.5vw; font-weight: 600; color: #9ca3af; }
+  .card.idle .limb { font-size: clamp(16px, 5vw, 26px); font-weight: 600; color: #9ca3af; }
 
   .card.pop { animation: pop .35s ease; }
   @keyframes pop { 0% { transform: scale(.94); } 55% { transform: scale(1.03); } 100% { transform: scale(1); } }
@@ -94,6 +104,7 @@
   .btn {
     flex: 1 1 auto;
     min-width: 110px;
+    min-height: 44px;
     padding: 16px 18px;
     font-size: 17px;
     font-weight: 700;
@@ -103,6 +114,7 @@
     cursor: pointer;
     color: #fff;
     background: #374151;
+    touch-action: manipulation;
   }
   .btn:active { filter: brightness(.9); }
   .btn.primary { background: #16a34a; flex: 1 1 100%; }
@@ -166,12 +178,22 @@
   const muteBtn = document.getElementById('muteBtn');
   const note = document.getElementById('note');
 
+  // מתאים לגודל המסך האמיתי ב-Safari לאייפון, שם 100vh לא מתחשב בסרגל הכתובת
+  function setViewportHeight() {
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+  }
+  setViewportHeight();
+  window.addEventListener('resize', setViewportHeight);
+  window.addEventListener('orientationchange', setViewportHeight);
+
   const speechSupported = 'speechSynthesis' in window;
   let voices = [];
   function loadVoices() { voices = speechSynthesis.getVoices(); }
   if (speechSupported) {
     loadVoices();
     speechSynthesis.onvoiceschanged = loadVoices;
+    // ב-iOS Safari הרשימה לפעמים חוזרת ריקה בהתחלה בלי אירוע onvoiceschanged
+    setTimeout(loadVoices, 300);
   } else {
     muteBtn.disabled = true;
     note.textContent = 'הדפדפן הזה לא תומך בהקראה קולית — ההוראות יוצגו על המסך בלבד';
@@ -184,16 +206,20 @@
   let tickHandle = null;
   let last = null;
   let wakeLock = null;
+  let currentUtterance = null; // מוחזק במשתנה חיצוני כדי שלא ייאסף על ידי ה-GC לפני שהוא מדבר (תקלה ידועה ב-Safari)
 
   function speak(text) {
     if (!speechSupported || muted) return;
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'he-IL';
+    currentUtterance = new SpeechSynthesisUtterance(text);
+    currentUtterance.lang = 'he-IL';
     const heVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he'));
-    if (heVoice) u.voice = heVoice;
-    u.rate = 0.95;
-    speechSynthesis.speak(u);
+    if (heVoice) currentUtterance.voice = heVoice;
+    currentUtterance.rate = 0.95;
+    // ב-iOS Safari קריאה מיידית ל-speak() אחרי cancel() לפעמים "נבלעת" בשקט
+    setTimeout(() => {
+      if (currentUtterance) speechSynthesis.speak(currentUtterance);
+    }, 40);
   }
 
   function pickInstruction() {
@@ -276,6 +302,7 @@
       clearInterval(tickHandle);
       tickHandle = null;
       barFill.style.animationPlayState = 'paused';
+      currentUtterance = null;
       speechSynthesis.cancel();
     } else {
       tickHandle = setInterval(secondTick, 1000);
@@ -301,6 +328,7 @@
     barFill.classList.remove('running');
     barFill.style.animation = 'none';
     barFill.style.width = '100%';
+    currentUtterance = null;
     if (speechSupported) speechSynthesis.cancel();
     releaseWakeLock();
     updateButtons();
@@ -310,7 +338,10 @@
     muted = !muted;
     muteBtn.textContent = muted ? '🔇' : '🔊';
     muteBtn.setAttribute('aria-pressed', String(muted));
-    if (muted && speechSupported) speechSynthesis.cancel();
+    if (muted && speechSupported) {
+      currentUtterance = null;
+      speechSynthesis.cancel();
+    }
   }
 
   document.addEventListener('visibilitychange', () => {
