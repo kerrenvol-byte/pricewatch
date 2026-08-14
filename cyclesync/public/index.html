@@ -161,6 +161,15 @@
         <div id="importStatus" class="import-status hidden"></div>
       </div>
 
+      <div class="card">
+        <h3>גיבוי הנתונים שלך</h3>
+        <p class="muted small">כל הנתונים נשמרים רק על המכשיר הזה. מומלץ להוריד גיבוי מדי פעם — ולשחזר ממנו אם עוברת למכשיר אחר.</p>
+        <button id="downloadBackupBtn" class="btn btn-secondary btn-block">הורידי גיבוי</button>
+        <input type="file" id="restoreFileInput" accept=".json,application/json" class="hidden" />
+        <button id="restoreBackupBtn" class="btn btn-ghost btn-block">שחזור מגיבוי</button>
+        <div id="backupStatus" class="import-status hidden"></div>
+      </div>
+
     </section>
 
   </main>
@@ -203,6 +212,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

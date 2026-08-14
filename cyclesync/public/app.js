@@ -1,5 +1,8 @@
 'use strict';
 
+import * as Engine from './cycleEngine.js';
+import * as Store from './store.js';
+
 const state = {
   view: 'today',
   dashboard: null,
@@ -17,11 +20,107 @@ const PHASE_GUIDE_DATA = [
   { label: 'לוטאלי', icon: '🌙', color: '#7048e8', energy: 'יורדת בהדרגה', appetite: 'עלייה בתיאבון ובחשקים', mood: 'רגישות, יתכן PMS לקראת הסוף' },
 ];
 
+// ===== Local data service (replaces what used to be server API calls) =====
+
+function getAllCycles() {
+  return Engine.groupPeriodsIntoCycles(Store.getAllPeriodDates());
+}
+
+function getDashboard() {
+  const cycles = getAllCycles();
+  const today = Engine.todayStr();
+  const info = Engine.getCycleInfo(today, cycles);
+  return { today, todayIsPeriodDay: Store.isPeriodDay(today), todayLog: Store.getLog(today), ...info };
+}
+
+function getCalendarData(month) {
+  const cycles = getAllCycles();
+  const stats = Engine.computeCycleStats(cycles);
+  const [y, m] = month.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const periodDates = new Set(Store.getAllPeriodDates());
+  const logDates = new Set(Store.getAllLogs().map((l) => l.date));
+  const today = Engine.todayStr();
+
+  const predictedPeriodDates = new Set();
+  const fertileDates = new Set();
+  if (stats.hasData) {
+    const info = Engine.getCycleInfo(today, cycles);
+    for (let i = 0; i < stats.avgPeriodLength; i++) {
+      predictedPeriodDates.add(Engine.addDays(info.predictedNextPeriod, i));
+    }
+    let d = info.fertileWindow.start;
+    while (d <= info.fertileWindow.end) {
+      fertileDates.add(d);
+      d = Engine.addDays(d, 1);
+    }
+  }
+
+  const days = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${month}-${String(d).padStart(2, '0')}`;
+    const ctx = Engine.getCycleContextForDate(dateStr, cycles, stats);
+    days.push({
+      date: dateStr,
+      isPeriod: periodDates.has(dateStr),
+      hasLog: logDates.has(dateStr),
+      isToday: dateStr === today,
+      isPredictedPeriod: predictedPeriodDates.has(dateStr),
+      isFertile: fertileDates.has(dateStr),
+      cycleDay: ctx?.cycleDay ?? null,
+      phase: ctx?.phase ?? null,
+    });
+  }
+  return { month, days };
+}
+
+function getHistoryData() {
+  const cycles = getAllCycles();
+  const stats = Engine.computeCycleStats(cycles);
+  const cycleLengthSeries = stats.cycleLengths.map((length, i) => ({
+    length,
+    fromDate: cycles[i].start,
+    toDate: cycles[i + 1].start,
+  }));
+  return { cycles: [...cycles].reverse(), stats, cycleLengthSeries };
+}
+
+function getPatternsData() {
+  const cycles = getAllCycles();
+  const stats = Engine.computeCycleStats(cycles);
+  const patterns = Engine.computePersonalPatterns(Store.getAllLogs(), cycles, stats);
+  return { patterns, avgCycleLength: stats.avgCycleLength, hasEnoughData: stats.totalCyclesLogged >= 2 };
+}
+
+function getLogsData(days = 30) {
+  const start = Engine.addDays(Engine.todayStr(), -(days - 1));
+  return { logs: Store.getAllLogs().filter((l) => l.date >= start) };
+}
+
+function importHealthExport(xmlText) {
+  const recordRe = /<Record\b[^>]*\btype="HKCategoryTypeIdentifierMenstrualFlow"[^>]*\/>/g;
+  const dateRe = /\bstartDate="(\d{4}-\d{2}-\d{2})/;
+  const existing = new Set(Store.getAllPeriodDates());
+  let match;
+  let found = 0;
+  let imported = 0;
+  while ((match = recordRe.exec(xmlText))) {
+    found++;
+    const dateMatch = dateRe.exec(match[0]);
+    if (!dateMatch) continue;
+    if (!existing.has(dateMatch[1])) {
+      Store.setPeriodDay(dateMatch[1], true, 'medium');
+      existing.add(dateMatch[1]);
+      imported++;
+    }
+  }
+  return { found, imported };
+}
+
 // ===== Helpers =====
 
 function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return Engine.todayStr();
 }
 function currentMonthStr() {
   return todayStr().slice(0, 7);
@@ -34,14 +133,6 @@ function formatShortDate(dateStr) {
   const [, m, d] = dateStr.split('-');
   return `${d}/${m}`;
 }
-
-async function api(path, opts) {
-  const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
-  if (!res.ok) throw new Error(`API ${path} failed: ${res.status}`);
-  return res.json();
-}
-const apiGet = (path) => api(path);
-const apiPost = (path, body) => api(path, { method: 'POST', body: JSON.stringify(body) });
 
 let toastTimer;
 function showToast(msg) {
@@ -97,7 +188,7 @@ function renderPickers(pickerEls, log) {
   });
 }
 
-async function onPickerClick(picker, metric, val) {
+function onPickerClick(picker, metric, val) {
   const current = picker.querySelector('.picker-btn.selected');
   const isModal = !!picker.closest('#dayModal');
   const date = isModal ? state.modalDate : todayStr();
@@ -108,7 +199,7 @@ async function onPickerClick(picker, metric, val) {
     btn.classList.toggle('selected', Number(btn.dataset.value) === newVal);
   });
 
-  await apiPost('/api/log', { date, [metric]: newVal });
+  Store.setLog(date, { [metric]: newVal });
   showToast('נשמר ✓');
 
   if (!isModal && state.dashboard) {
@@ -118,8 +209,8 @@ async function onPickerClick(picker, metric, val) {
 
 // ===== Today =====
 
-async function loadDashboard() {
-  const data = await apiGet('/api/dashboard');
+function loadDashboard() {
+  const data = getDashboard();
   state.dashboard = data;
   renderToday(data);
 }
@@ -195,9 +286,8 @@ function renderToday(data) {
 
 // ===== Calendar =====
 
-async function loadCalendar() {
-  const data = await apiGet(`/api/calendar?month=${state.calendarMonth}`);
-  renderCalendar(data);
+function loadCalendar() {
+  renderCalendar(getCalendarData(state.calendarMonth));
 }
 
 function renderCalendar(data) {
@@ -237,10 +327,10 @@ function shiftMonth(delta) {
   loadCalendar();
 }
 
-async function openDayModal(date) {
+function openDayModal(date) {
   state.modalDate = date;
   document.getElementById('dayModalDate').textContent = formatHebrewDate(date);
-  const log = await apiGet(`/api/log/${date}`);
+  const log = { ...Store.getLog(date), isPeriod: Store.isPeriodDay(date) };
   const btn = document.getElementById('dayModalPeriodToggle');
   btn.classList.toggle('active', log.isPeriod);
   document.getElementById('dayModalPeriodLabel').textContent = log.isPeriod ? 'יום וסת ✓' : 'יום וסת';
@@ -297,16 +387,12 @@ function baseChartOptions(min, max) {
   };
 }
 
-async function loadInsights() {
+function loadInsights() {
   renderPhaseGuide();
-  const [logsData, patternsData, historyData] = await Promise.all([
-    apiGet('/api/logs?days=30'),
-    apiGet('/api/patterns'),
-    apiGet('/api/history'),
-  ]);
-  renderTrendChart(logsData);
-  renderPatternsChart(patternsData);
-  renderLengthChart(historyData);
+  if (typeof Chart === 'undefined') return; // אין אינטרנט כרגע — שאר האפליקציה ממשיכה לעבוד
+  renderTrendChart(getLogsData(30));
+  renderPatternsChart(getPatternsData());
+  renderLengthChart(getHistoryData());
 }
 
 function renderTrendChart(data) {
@@ -384,9 +470,8 @@ function renderPhaseGuide() {
 
 // ===== History =====
 
-async function loadHistory() {
-  const data = await apiGet('/api/history');
-  renderHistory(data);
+function loadHistory() {
+  renderHistory(getHistoryData());
 }
 
 function renderHistory(data) {
@@ -424,26 +509,53 @@ async function handleHealthFile(file) {
     return;
   }
 
-  statusEl.textContent = 'קוראת את הקובץ...';
+  statusEl.textContent = 'קוראת ומייבאת...';
   try {
     const text = await file.text();
-    statusEl.textContent = 'מייבאת נתונים...';
-    const result = await fetch('/api/import/health-export', {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: text,
-    }).then((r) => r.json());
-
+    const result = importHealthExport(text);
     if (result.found === 0) {
       statusEl.textContent = 'לא נמצאו רשומות וסת בקובץ הזה';
     } else {
       statusEl.textContent = `נמצאו ${result.found} רשומות, יובאו ${result.imported} ימים חדשים 🎉`;
       showToast('הייבוא הושלם');
     }
-    await loadDashboard();
+    loadDashboard();
     if (state.view === 'history') loadHistory();
   } catch (err) {
     statusEl.textContent = 'שגיאה בייבוא הקובץ. ודאי שבחרת את קובץ export.xml.';
+  }
+}
+
+// ===== Backup / restore (הנתונים נשמרים רק על המכשיר הזה — חשוב לגבות מדי פעם) =====
+
+function downloadBackup() {
+  const data = Store.exportAllData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cyclesync-backup-${todayStr()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('הגיבוי הורד ✓');
+}
+
+async function restoreBackup(file) {
+  const statusEl = document.getElementById('backupStatus');
+  statusEl.classList.remove('hidden');
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.periodDays || !data.dailyLogs) throw new Error('invalid backup file');
+    Store.importAllData(data);
+    statusEl.textContent = 'השחזור הושלם 🎉';
+    showToast('הנתונים שוחזרו');
+    loadDashboard();
+    if (state.view === 'history') loadHistory();
+  } catch (err) {
+    statusEl.textContent = 'קובץ הגיבוי לא תקין';
   }
 }
 
@@ -457,11 +569,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
 
-  document.getElementById('periodToggle').addEventListener('click', async () => {
+  document.getElementById('periodToggle').addEventListener('click', () => {
     const willBeActive = !state.dashboard.todayIsPeriodDay;
-    await apiPost('/api/period-day', { date: todayStr(), active: willBeActive });
+    Store.setPeriodDay(todayStr(), willBeActive);
     showToast(willBeActive ? 'סומן כיום וסת 🩸' : 'הוסר סימון יום וסת');
-    await loadDashboard();
+    loadDashboard();
   });
 
   document.getElementById('noteToggle').addEventListener('click', () => {
@@ -471,15 +583,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('noteInput').addEventListener('input', (e) => {
     clearTimeout(noteDebounce);
     const value = e.target.value;
-    noteDebounce = setTimeout(() => apiPost('/api/log', { date: todayStr(), note: value }), 600);
+    noteDebounce = setTimeout(() => Store.setLog(todayStr(), { note: value }), 500);
   });
 
-  document.getElementById('onboardingStart').addEventListener('click', async () => {
+  document.getElementById('onboardingStart').addEventListener('click', () => {
     const date = document.getElementById('onboardingDate').value;
     if (!date) return showToast('בחרי תאריך');
-    await apiPost('/api/period-day', { date, active: true });
+    Store.setPeriodDay(date, true);
     showToast('התחלנו לעקוב 🌸');
-    await loadDashboard();
+    loadDashboard();
   });
   document.getElementById('onboardingImport').addEventListener('click', () => {
     switchView('history');
@@ -493,10 +605,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dayModal').addEventListener('click', (e) => {
     if (e.target.id === 'dayModal') closeDayModal();
   });
-  document.getElementById('dayModalPeriodToggle').addEventListener('click', async () => {
+  document.getElementById('dayModalPeriodToggle').addEventListener('click', () => {
     const btn = document.getElementById('dayModalPeriodToggle');
     const willBeActive = !btn.classList.contains('active');
-    await apiPost('/api/period-day', { date: state.modalDate, active: willBeActive });
+    Store.setPeriodDay(state.modalDate, willBeActive);
     btn.classList.toggle('active', willBeActive);
     document.getElementById('dayModalPeriodLabel').textContent = willBeActive ? 'יום וסת ✓' : 'יום וסת';
   });
@@ -509,5 +621,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (file) handleHealthFile(file);
   });
 
+  document.getElementById('downloadBackupBtn').addEventListener('click', downloadBackup);
+  document.getElementById('restoreBackupBtn').addEventListener('click', () => {
+    document.getElementById('restoreFileInput').click();
+  });
+  document.getElementById('restoreFileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) restoreBackup(file);
+  });
+
   loadDashboard();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
 });
