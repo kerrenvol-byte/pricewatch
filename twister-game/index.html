@@ -71,6 +71,13 @@
     font-weight: 600;
     opacity: .9;
   }
+  .card .alt {
+    font-size: clamp(14px, 4vw, 22px);
+    font-weight: 600;
+    opacity: .72;
+    direction: ltr;
+  }
+  .card .alt:empty { display: none; }
   .card.idle .limb { font-size: clamp(16px, 5vw, 26px); font-weight: 600; color: #9ca3af; }
 
   .card.pop { animation: pop .35s ease; }
@@ -123,6 +130,56 @@
   .btn[hidden] { display: none; }
 
   .note { font-size: 12px; color: #6b7280; text-align: center; }
+
+  .langbar {
+    display: flex;
+    gap: 6px;
+    padding: 5px;
+    background: rgba(255,255,255,.06);
+    border-radius: 12px;
+  }
+  .lang {
+    min-height: 36px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    color: #9ca3af;
+    background: transparent;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .lang[aria-pressed="true"] { background: #374151; color: #fff; }
+
+  .side {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: min(14px, 2.4vh);
+  }
+
+  /* בלנדסקייפ על טלפון הגובה הוא המשאב הנדיר — עוברים לשתי עמודות
+     כדי שכל הכפתורים יישארו על המסך בלי גלילה */
+  @media (orientation: landscape) and (max-height: 540px) {
+    .wrap { flex-direction: row; align-items: center; gap: 20px; max-width: 780px; }
+    header { display: none; }
+    .card {
+      flex: 0 0 auto;
+      width: auto;
+      height: min(84vh, 300px);
+      max-height: none;
+      border-radius: 22px;
+    }
+    .card .limb { font-size: clamp(26px, 8vh, 54px); }
+    .card .color { font-size: clamp(15px, 4.6vh, 30px); }
+    .card .alt { font-size: clamp(12px, 3.4vh, 20px); }
+    .side { flex: 1 1 auto; min-width: 0; gap: 10px; }
+    .btn { min-height: 42px; padding: 11px 16px; font-size: 15px; }
+    .note { font-size: 11px; }
+  }
 </style>
 </head>
 <body>
@@ -135,19 +192,28 @@
     <div id="card" class="card idle">
       <div class="limb" id="limbText">לחצו התחלה כדי לשחק</div>
       <div class="color" id="colorText"></div>
+      <div class="alt" id="altText"></div>
     </div>
 
-    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
-    <div class="countdown" id="countdown"></div>
+    <div class="side">
+      <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+      <div class="countdown" id="countdown"></div>
 
-    <div class="controls">
-      <button id="startBtn" class="btn primary">▶️ התחלה</button>
-      <button id="pauseBtn" class="btn" hidden>⏸️ השהיה</button>
-      <button id="stopBtn" class="btn danger" hidden>⏹️ עצירה</button>
-      <button id="muteBtn" class="btn ghost" aria-pressed="false" title="השתקת קול">🔊</button>
+      <div class="langbar" role="group" aria-label="שפת ההקראה">
+        <button class="lang" data-lang="he" aria-pressed="true">עברית</button>
+        <button class="lang" data-lang="en" aria-pressed="false">English</button>
+        <button class="lang" data-lang="both" aria-pressed="false">עב + EN</button>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn" class="btn primary">▶️ התחלה</button>
+        <button id="pauseBtn" class="btn" hidden>⏸️ השהיה</button>
+        <button id="stopBtn" class="btn danger" hidden>⏹️ עצירה</button>
+        <button id="muteBtn" class="btn ghost" aria-pressed="false" title="השתקת קול">🔊</button>
+      </div>
+
+      <p class="note" id="note">ודאו שהעוצמה פתוחה כדי לשמוע את ההוראות</p>
     </div>
-
-    <p class="note" id="note">ודאו שהעוצמה פתוחה כדי לשמוע את ההוראות</p>
   </div>
 
 <script>
@@ -155,17 +221,28 @@
   const ROUND_SECONDS = 7;
 
   const COLORS = [
-    { name: 'אדום', hex: '#E8112D', dark: false },
-    { name: 'כחול', hex: '#0057B8', dark: false },
-    { name: 'צהוב', hex: '#FFD100', dark: true },
-    { name: 'ירוק', hex: '#00A651', dark: false },
+    { he: 'אדום', en: 'Red',    hex: '#E8112D', dark: false },
+    { he: 'כחול', en: 'Blue',   hex: '#0057B8', dark: false },
+    { he: 'צהוב', en: 'Yellow', hex: '#FFD100', dark: true  },
+    { he: 'ירוק', en: 'Green',  hex: '#00A651', dark: false },
   ];
   const LIMBS = [
-    { part: 'יד',  side: 'ימין'  },
-    { part: 'יד',  side: 'שמאל'  },
-    { part: 'רגל', side: 'ימין'  },
-    { part: 'רגל', side: 'שמאל'  },
+    { he: 'יד ימין',  en: 'Right hand' },
+    { he: 'יד שמאל',  en: 'Left hand'  },
+    { he: 'רגל ימין', en: 'Right foot' },
+    { he: 'רגל שמאל', en: 'Left foot'  },
   ];
+
+  // he = עברית בלבד · en = אנגלית בלבד · both = עברית ואחריה אנגלית
+  let lang = 'he';
+  try { lang = localStorage.getItem('twister_lang') || 'he'; } catch (e) { /* localStorage חסום */ }
+  if (!['he', 'en', 'both'].includes(lang)) lang = 'he';
+
+  const IDLE_TEXT = { he: 'לחצו התחלה כדי לשחק', en: 'Tap start to play' };
+  const phrase = {
+    he: (limb, color) => `${limb.he} על ${color.he}`,
+    en: (limb, color) => `${limb.en} on ${color.en}`,
+  };
 
   const card = document.getElementById('card');
   const limbText = document.getElementById('limbText');
@@ -177,6 +254,8 @@
   const stopBtn = document.getElementById('stopBtn');
   const muteBtn = document.getElementById('muteBtn');
   const note = document.getElementById('note');
+  const altText = document.getElementById('altText');
+  const langBtns = Array.from(document.querySelectorAll('.lang'));
 
   // מתאים לגודל המסך האמיתי ב-Safari לאייפון, שם 100vh לא מתחשב בסרגל הכתובת
   function setViewportHeight() {
@@ -189,20 +268,30 @@
   const speechSupported = 'speechSynthesis' in window;
   let voices = [];
 
-  function hebrewVoice() {
-    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he'));
+  const VOICE_PREFIX = { he: 'he', en: 'en' };
+  function voiceFor(code) {
+    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith(VOICE_PREFIX[code]));
   }
 
-  // מציג במכשיר עצמו אם נמצא קול עברי — כך אפשר לאבחן בעיות הקראה ישירות מהטלפון
+  // שפות שצריך להקריא בפועל לפי הבחירה הנוכחית
+  function activeLangs() {
+    return lang === 'both' ? ['he', 'en'] : [lang];
+  }
+
+  // מציג במכשיר עצמו אילו קולות נמצאו — כך אפשר לאבחן בעיות הקראה ישירות מהטלפון
   function updateVoiceNote() {
     if (!speechSupported) return;
-    const he = hebrewVoice();
-    if (he) {
-      note.textContent = `🔊 נמצא קול בעברית: ${he.name}`;
-    } else if (voices.length) {
-      note.textContent = '⚠️ לא נמצא קול בעברית במכשיר — ההקראה תישמע במבטא זר. בהגדרות ← נגישות ← תוכן מדובר ← קולות, הורידו קול עברית.';
-    } else {
+    if (!voices.length) {
       note.textContent = 'ודאו שהעוצמה פתוחה ושמתג ההשתקה בצד המכשיר כבוי';
+      return;
+    }
+    const LABEL = { he: 'עברית', en: 'אנגלית' };
+    const missing = activeLangs().filter(c => !voiceFor(c));
+    if (missing.length) {
+      const names = missing.map(c => LABEL[c]).join(' ו');
+      note.textContent = `⚠️ לא נמצא קול ב${names} במכשיר — ההקראה תישמע במבטא זר. בהגדרות ← נגישות ← תוכן מדובר ← קולות אפשר להוריד קול.`;
+    } else {
+      note.textContent = '🔊 ' + activeLangs().map(c => `${LABEL[c]}: ${voiceFor(c).name}`).join(' · ');
     }
   }
 
@@ -229,27 +318,40 @@
   let tickHandle = null;
   let last = null;
   let wakeLock = null;
-  let currentUtterance = null; // מוחזק במשתנה חיצוני כדי שלא ייאסף על ידי ה-GC לפני שהוא מדבר (תקלה ידועה ב-Safari)
+  let pending = null; // מוחזק במשתנה חיצוני כדי שה-GC לא יאסוף את ההקראות לפני שנשמעו (תקלה ידועה ב-Safari)
 
-  function speak(text) {
-    if (!speechSupported || muted) return;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'he-IL';
-    const heVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he'));
-    if (heVoice) utter.voice = heVoice;
-    utter.rate = 0.95;
-    currentUtterance = utter;
+  const BCP47 = { he: 'he-IL', en: 'en-US' };
+
+  // מקריא רצף (בעברית, באנגלית, או בשתיהן ברצף) בקריאה אחת
+  function speakSequence(items) {
+    if (!speechSupported || muted || !items.length) return;
+    const utterances = items.map(({ text, code }) => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = BCP47[code];
+      const v = voiceFor(code);
+      if (v) u.voice = v;
+      u.rate = 0.95;
+      return u;
+    });
+    pending = utterances;
+
+    const queueAll = () => {
+      if (pending !== utterances) return; // בוטל בינתיים (עצירה / השהיה / השתקה)
+      utterances.forEach(u => speechSynthesis.speak(u));
+    };
 
     if (speechSynthesis.speaking || speechSynthesis.pending) {
       // צריך לקטוע הקראה קודמת; ב-iOS Safari speak() מיד אחרי cancel() לפעמים "נבלע" בשקט
       speechSynthesis.cancel();
-      setTimeout(() => {
-        if (currentUtterance === utter) speechSynthesis.speak(utter);
-      }, 40);
+      setTimeout(queueAll, 40);
     } else {
       // קריאה סינכרונית — שומרת על שרשרת מחוות המשתמש, שבלעדיה iOS חוסם את ההקראה הראשונה
-      speechSynthesis.speak(utter);
+      queueAll();
     }
+  }
+
+  function speakInstruction(limb, color) {
+    speakSequence(activeLangs().map(code => ({ text: phrase[code](limb, color), code })));
   }
 
   function pickInstruction() {
@@ -257,7 +359,7 @@
     do {
       color = COLORS[Math.floor(Math.random() * COLORS.length)];
       limb = LIMBS[Math.floor(Math.random() * LIMBS.length)];
-    } while (last && color.name === last.color.name && limb.part === last.limb.part && limb.side === last.limb.side);
+    } while (last && color.he === last.color.he && limb.he === last.limb.he);
     last = { color, limb };
     return last;
   }
@@ -273,18 +375,26 @@
     barFill.classList.add('running');
   }
 
+  // בשפה אחת מוצג הטקסט הגדול בלבד; ב"עב + EN" נוספת שורת האנגלית מתחת
+  function renderInstruction(limb, color) {
+    const primary = lang === 'en' ? 'en' : 'he';
+    limbText.textContent = limb[primary];
+    colorText.textContent = color[primary];
+    altText.textContent = lang === 'both' ? phrase.en(limb, color) : '';
+    const ink = color.dark ? '#1c2333' : '#ffffff';
+    limbText.style.color = colorText.style.color = altText.style.color = ink;
+  }
+
   function newInstruction() {
     const { color, limb } = pickInstruction();
     card.classList.remove('idle');
-    limbText.textContent = `${limb.part} ${limb.side}`;
-    colorText.textContent = color.name;
+    renderInstruction(limb, color);
     card.style.background = color.hex;
-    limbText.style.color = colorText.style.color = color.dark ? '#1c2333' : '#ffffff';
     card.classList.remove('pop');
     void card.offsetWidth;
     card.classList.add('pop');
     if (navigator.vibrate) navigator.vibrate(60);
-    speak(`${limb.part} ${limb.side} על ${color.name}`);
+    speakInstruction(limb, color);
     remaining = ROUND_SECONDS;
     countdownEl.textContent = remaining;
     restartBar();
@@ -332,7 +442,7 @@
       clearInterval(tickHandle);
       tickHandle = null;
       barFill.style.animationPlayState = 'paused';
-      currentUtterance = null;
+      pending = null;
       speechSynthesis.cancel();
     } else {
       tickHandle = setInterval(secondTick, 1000);
@@ -352,13 +462,14 @@
     card.classList.add('idle');
     card.classList.remove('pop');
     card.style.background = '';
-    limbText.style.color = colorText.style.color = '';
-    limbText.textContent = 'לחצו התחלה כדי לשחק';
+    limbText.style.color = colorText.style.color = altText.style.color = '';
+    limbText.textContent = IDLE_TEXT[lang === 'en' ? 'en' : 'he'];
     colorText.textContent = '';
+    altText.textContent = '';
     barFill.classList.remove('running');
     barFill.style.animation = 'none';
     barFill.style.width = '100%';
-    currentUtterance = null;
+    pending = null;
     if (speechSupported) speechSynthesis.cancel();
     releaseWakeLock();
     updateButtons();
@@ -369,9 +480,20 @@
     muteBtn.textContent = muted ? '🔇' : '🔊';
     muteBtn.setAttribute('aria-pressed', String(muted));
     if (muted && speechSupported) {
-      currentUtterance = null;
+      pending = null;
       speechSynthesis.cancel();
     }
+  }
+
+  function setLang(next) {
+    if (lang === next) return;
+    lang = next;
+    try { localStorage.setItem('twister_lang', lang); } catch (e) { /* localStorage חסום */ }
+    langBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    updateVoiceNote();
+    // מציג מחדש את ההוראה הנוכחית בשפה החדשה, בלי לאפס את הטיימר
+    if (running && last) renderInstruction(last.limb, last.color);
+    else if (!running) limbText.textContent = IDLE_TEXT[lang === 'en' ? 'en' : 'he'];
   }
 
   document.addEventListener('visibilitychange', () => {
@@ -382,6 +504,11 @@
   pauseBtn.addEventListener('click', togglePause);
   stopBtn.addEventListener('click', stop);
   muteBtn.addEventListener('click', toggleMute);
+  langBtns.forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+  // מיישר את המצב ההתחלתי לשפה שנשמרה מהפעם הקודמת
+  langBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  limbText.textContent = IDLE_TEXT[lang === 'en' ? 'en' : 'he'];
 })();
 </script>
 </body>
