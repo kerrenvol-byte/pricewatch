@@ -1,0 +1,754 @@
+<title>18 פריימים</title>
+<style>
+  :root {
+    --ground:      #F6F3EF;
+    --surface:     #FFFFFF;
+    --surface-2:   #EFEAE3;
+    --line:        #E0D9CF;
+    --line-strong: #CFC5B8;
+    --ink:         #1A1714;
+    --ink-2:       #453E37;
+    --muted:       #6E655B;
+    --laser:       #D2571A;
+    --laser-soft:  #F6E4D6;
+    --glow:        rgba(210, 87, 26, 0.00);
+
+    --src-real:    #16776A;
+    --src-real-bg: #DEEFEB;
+    --src-ai:      #5A50A8;
+    --src-ai-bg:   #E6E3F5;
+    --src-hyb:     #8A6011;
+    --src-hyb-bg:  #F4EAD4;
+    --src-gfx:     #64605A;
+    --src-gfx-bg:  #E8E4DE;
+
+    /* the frames are the film — always dark, in both themes */
+    --frame-bg:    #0C0B0A;
+    --frame-ink:   #EBE5DB;
+    --frame-hot:   #F2803D;
+    --frame-warm:  #E8B478;
+
+    --font-he: "Heebo", "Assistant", "Rubik", "Noto Sans Hebrew", "Arial Hebrew", "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #141311;
+      --surface:     #1C1A17;
+      --surface-2:   #232019;
+      --line:        #2F2B26;
+      --line-strong: #443E36;
+      --ink:         #EFEAE2;
+      --ink-2:       #C7BFB4;
+      --muted:       #9A9188;
+      --laser:       #F2803D;
+      --laser-soft:  #33200F;
+      --glow:        rgba(242, 128, 61, 0.20);
+
+      --src-real:    #5FC7AC;
+      --src-real-bg: #12312B;
+      --src-ai:      #A79EE8;
+      --src-ai-bg:   #241F3D;
+      --src-hyb:     #E0A93B;
+      --src-hyb-bg:  #33280F;
+      --src-gfx:     #A29B92;
+      --src-gfx-bg:  #262320;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #141311;
+    --surface:     #1C1A17;
+    --surface-2:   #232019;
+    --line:        #2F2B26;
+    --line-strong: #443E36;
+    --ink:         #EFEAE2;
+    --ink-2:       #C7BFB4;
+    --muted:       #9A9188;
+    --laser:       #F2803D;
+    --laser-soft:  #33200F;
+    --glow:        rgba(242, 128, 61, 0.20);
+
+    --src-real:    #5FC7AC;
+    --src-real-bg: #12312B;
+    --src-ai:      #A79EE8;
+    --src-ai-bg:   #241F3D;
+    --src-hyb:     #E0A93B;
+    --src-hyb-bg:  #33280F;
+    --src-gfx:     #A29B92;
+    --src-gfx-bg:  #262320;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-he);
+    font-size: 17px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    direction: rtl;
+    text-align: right;
+    max-width: 74rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 4.5rem) clamp(1rem, 4vw, 3rem) 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.2rem, 5vw, 3.5rem);
+  }
+
+  p { margin: 0; }
+  .prose { max-width: 58ch; }
+
+  header { display: flex; flex-direction: column; gap: 1rem; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: .66rem;
+    letter-spacing: .2em;
+    color: var(--laser);
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.1rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+    text-shadow: 0 0 30px var(--glow);
+  }
+  .laser-rule {
+    height: 2px;
+    width: min(100%, 22rem);
+    background: linear-gradient(to left, var(--laser), transparent);
+    box-shadow: 0 0 12px var(--glow);
+  }
+  .lede { color: var(--ink-2); font-size: 1.05rem; max-width: 54ch; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: .62rem;
+    letter-spacing: .11em;
+    padding: .16rem .5rem;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .chip--real { color: var(--src-real); background: var(--src-real-bg); }
+  .chip--ai   { color: var(--src-ai);   background: var(--src-ai-bg); }
+  .chip--hyb  { color: var(--src-hyb);  background: var(--src-hyb-bg); }
+  .chip--gfx  { color: var(--src-gfx);  background: var(--src-gfx-bg); }
+
+  /* ---------- act divider ---------- */
+  .act {
+    display: flex;
+    align-items: baseline;
+    gap: .9rem;
+    border-top: 1px solid var(--line-strong);
+    padding-top: .8rem;
+    margin-top: .4rem;
+  }
+  .act h2 { font-size: 1.15rem; font-weight: 700; margin: 0; white-space: nowrap; }
+  .act .tc {
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    color: var(--laser);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .act .desc { font-size: .88rem; color: var(--muted); }
+
+  /* ---------- board grid ---------- */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 1.4rem 1rem;
+  }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: .5rem; }
+
+  .frame {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    background: var(--frame-bg);
+    border: 1px solid var(--line-strong);
+    overflow: hidden;
+    display: block;
+  }
+  .frame svg { display: block; width: 100%; height: 100%; }
+  .frame--hero { border-color: var(--laser); box-shadow: 0 0 0 1px var(--laser); }
+
+  .slug {
+    position: absolute;
+    top: 0; inset-inline-start: 0;
+    font-family: var(--font-mono);
+    font-size: .58rem;
+    letter-spacing: .1em;
+    color: var(--frame-ink);
+    background: rgba(12, 11, 10, .82);
+    padding: .16rem .38rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .move {
+    position: absolute;
+    bottom: 0; inset-inline-end: 0;
+    font-family: var(--font-mono);
+    font-size: .53rem;
+    letter-spacing: .12em;
+    color: var(--frame-hot);
+    background: rgba(12, 11, 10, .82);
+    padding: .16rem .38rem;
+  }
+
+  figcaption { display: flex; flex-direction: column; gap: .25rem; }
+  .cap-top {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    font-family: var(--font-mono);
+    font-size: .64rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .cap-top .dur { color: var(--laser); }
+  figcaption h3 { font-size: .88rem; font-weight: 700; margin: 0; line-height: 1.35; }
+  figcaption p { font-size: .8rem; color: var(--ink-2); line-height: 1.55; }
+  figcaption .chip { align-self: flex-start; margin-top: .1rem; }
+
+  /* ---------- svg idioms ---------- */
+  .ln   { fill: none; stroke: var(--frame-ink); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+  .dim  { fill: none; stroke: var(--frame-ink); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; opacity: .34; }
+  .hair { fill: none; stroke: var(--frame-ink); stroke-width: .7; stroke-linecap: round; opacity: .22; }
+  .hot  { fill: none; stroke: var(--frame-hot); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+  .fill-dim  { fill: var(--frame-ink); opacity: .10; stroke: none; }
+  .fill-glow { fill: var(--frame-hot); opacity: .16; stroke: none; }
+  .dot  { fill: var(--frame-ink); opacity: .5; stroke: none; }
+  .he   { fill: var(--frame-ink); font-family: var(--font-he); font-weight: 700; }
+  .he-hot { fill: var(--frame-hot); font-family: var(--font-he); font-weight: 700; }
+  .mono-s { fill: var(--frame-ink); font-family: var(--font-mono); opacity: .75; }
+
+  /* ---------- notes ---------- */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-inline-start: 3px solid var(--laser);
+    padding: 1.05rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .callout h3 { color: var(--laser); font-size: .95rem; margin: 0; }
+  .callout p, .callout li { color: var(--ink-2); font-size: .93rem; }
+  ul.plain { list-style: none; display: flex; flex-direction: column; gap: .45rem; }
+  ul.plain li { position: relative; padding-inline-start: 1.4rem; }
+  ul.plain li::before {
+    content: ""; position: absolute; inset-inline-start: .18rem; top: .72em;
+    width: .32rem; height: .32rem; background: var(--laser);
+  }
+  ul.plain li strong { color: var(--ink); font-weight: 600; }
+
+  a { color: var(--laser); }
+  :focus-visible { outline: 2px solid var(--laser); outline-offset: 2px; }
+
+  @media (max-width: 30rem) {
+    .board { grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: 1.1rem .7rem; }
+    body { font-size: 16px; }
+  }
+</style>
+
+<div class="page">
+
+  <header>
+    <span class="eyebrow">Storyboard · 9:16 · 35.0s</span>
+    <h1>18 פריימים</h1>
+    <div class="laser-rule"></div>
+    <p class="lede">
+      קאדראז׳ ותנועת מצלמה לכל שוט בסרטון ״לא חדש. חדש לגמרי.״ הסרטון נוצר כולו ב־AI,
+      ולכן כל פריים כאן הוא הקומפוזיציה שצריכה לצאת מהפרומפט — לוח בקרה לג׳נרציה, לא איור.
+    </p>
+    <div class="legend">
+      <span class="chip chip--ai">AI</span>
+      <span class="chip chip--hyb">AI + COMP</span>
+      <span class="chip chip--gfx">GFX</span>
+    </div>
+  </header>
+
+  <!-- ============ ACT 1 ============ -->
+  <div class="act">
+    <span class="tc">00:00 — 00:05</span>
+    <h2>הגעה</h2>
+    <span class="desc">שוטים רחבים יחסית, איטיים. אף אחד לא ממהר עדיין.</span>
+  </div>
+
+  <div class="board">
+
+    <!-- 01 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="שקית אנטי־סטטית עם מתאר לפטופ, קרן אור סורקת">
+          <polygon class="fill-glow" points="0,52 40,20 68,20 22,86"/>
+          <rect class="dim" x="20" y="72" width="68" height="54" rx="4"/>
+          <rect class="ln" x="27" y="80" width="54" height="38" rx="2"/>
+          <path class="hair" d="M27 99 H81"/>
+          <path class="dim" d="M20 72 q34 -8 68 0"/>
+          <path class="hair" d="M0 140 H108"/>
+        </svg>
+        <span class="slug">01</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:00.0</span><span class="dur">2.0s</span></div>
+        <h3>הגעה</h3>
+        <p>קרן אחת סורקת שקית אטומה. המתאר מסתמן, לא נחשף.</p>
+        <span class="chip chip--hyb">HYBRID</span>
+      </figcaption>
+    </figure>
+
+    <!-- 02 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="ידיים בכפפות מוציאות את המחשב, מאקרו">
+          <path class="dim" d="M18 62 q6 -10 16 -6 l52 20 q10 4 6 14 l-10 26 q-4 10 -14 6 l-52 -20 q-10 -4 -6 -14 Z"/>
+          <path class="hair" d="M22 58 q10 -8 18 -2 M84 76 q10 6 8 16"/>
+          <rect class="ln" x="30" y="112" width="66" height="20" rx="3"/>
+          <path class="hair" d="M30 122 H96"/>
+          <path class="hot" d="M22 122 H26 M96 148 H40 M48 142 L40 148 L48 154" opacity=".85"/>
+          <path class="hair" d="M0 140 H108"/>
+        </svg>
+        <span class="slug">02</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:02.0</span><span class="dur">1.5s</span></div>
+        <h3>השקית נפתחת</h3>
+        <p>המחשב מחליק החוצה מעצמו. אין ידיים בפריים.</p>
+        <span class="chip chip--ai">AI</span>
+      </figcaption>
+    </figure>
+
+    <!-- 03 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="טופ־דאון, המחשב על שולחן, אבק בקרן אור">
+          <polygon class="fill-glow" points="24,0 84,0 96,192 12,192"/>
+          <rect class="ln" x="22" y="66" width="64" height="62" rx="2"/>
+          <path class="dim" d="M22 97 H86"/>
+          <rect class="hair" x="30" y="103" width="48" height="18" rx="1"/>
+          <circle class="dot" cx="38" cy="40" r="1.2"/><circle class="dot" cx="62" cy="26" r="1"/>
+          <circle class="dot" cx="74" cy="48" r="1.4"/><circle class="dot" cx="48" cy="56" r=".9"/>
+          <circle class="dot" cx="56" cy="150" r="1.1"/><circle class="dot" cx="34" cy="164" r="1"/>
+          <circle class="dot" cx="78" cy="140" r=".9"/>
+        </svg>
+        <span class="slug">03</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:03.5</span><span class="dur">1.5s</span></div>
+        <h3>נחיתה על השולחן</h3>
+        <p>טופ־דאון. אבק עולה ונדלק בקרן — שכבה נפרדת בעריכה.</p>
+        <span class="chip chip--hyb">HYBRID</span>
+      </figcaption>
+    </figure>
+
+  </div>
+
+  <!-- ============ ACT 2 ============ -->
+  <div class="act">
+    <span class="tc">00:05 — 00:14</span>
+    <h2>פירוק ובדיקות</h2>
+    <span class="desc">הקאטים מתקצרים משוט לשוט. 2.0 שניות ← 1.0 שניות.</span>
+  </div>
+
+  <div class="board">
+
+    <!-- 04 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="מאקרו קיצוני של בורג ומברג דיוק">
+          <circle class="ln" cx="54" cy="118" r="30"/>
+          <circle class="dim" cx="54" cy="118" r="22"/>
+          <path class="ln" d="M40 118 H68"/>
+          <path class="ln" d="M46 20 H62 L58 86 H50 Z"/>
+          <path class="dim" d="M50 86 H58"/>
+          <path class="hair" d="M0 150 q54 10 108 0"/>
+        </svg>
+        <span class="slug">04</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:05.0</span><span class="dur">1.5s</span></div>
+        <h3>הבורג הראשון</h3>
+        <p>מאקרו קיצוני. סיבוב אחד, איטי.</p>
+        <span class="chip chip--real">REAL</span>
+      </figcaption>
+    </figure>
+
+    <!-- 05 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="פאנל הגב מתרומם וחושף את פנים המחשב">
+          <rect class="ln" x="14" y="96" width="80" height="60" rx="3"/>
+          <circle class="dim" cx="38" cy="120" r="12"/>
+          <path class="hair" d="M38 108 V132 M26 120 H50"/>
+          <rect class="dim" x="58" y="108" width="28" height="26" rx="2"/>
+          <path class="hair" d="M58 142 H86 M58 148 H78"/>
+          <path class="ln" d="M18 66 L92 52 L96 74 L22 88 Z"/>
+          <path class="hot" d="M100 82 V54"/>
+          <path class="hot" d="M96 60 L100 52 L104 60"/>
+        </svg>
+        <span class="slug">05</span><span class="move">RISE</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:06.5</span><span class="dur">1.5s</span></div>
+        <h3>הפאנל נפתח</h3>
+        <p>אור נשפך פנימה. מאווררים, סוללה, כבלי סרט.</p>
+        <span class="chip chip--ai">AI · I2V</span>
+      </figcaption>
+    </figure>
+
+    <!-- 06 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="מברשת על להבי מאוורר, אבק מתפזר">
+          <circle class="ln" cx="52" cy="112" r="34"/>
+          <circle class="dim" cx="52" cy="112" r="9"/>
+          <path class="dim" d="M52 103 q18 -14 26 4 M61 112 q14 18 -4 24 M43 112 q-14 18 4 24 M52 103 q-18 -14 -26 4 M70 118 q6 -20 -14 -22"/>
+          <path class="ln" d="M74 44 L96 62 L82 78 L62 60 Z"/>
+          <path class="hair" d="M64 62 L58 70 M70 68 L64 76 M76 74 L70 82"/>
+          <circle class="dot" cx="28" cy="52" r="1.2"/><circle class="dot" cx="20" cy="76" r="1"/>
+          <circle class="dot" cx="36" cy="34" r=".9"/><circle class="dot" cx="14" cy="46" r="1.1"/>
+        </svg>
+        <span class="slug">06</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:08.0</span><span class="dur">1.2s</span></div>
+        <h3>ניקוי</h3>
+        <p>אבק מתפזר לתוך האור. מאקרו על להבי המאוורר.</p>
+        <span class="chip chip--ai">AI · T2V</span>
+      </figcaption>
+    </figure>
+
+    <!-- 07 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="טיפת משחה תרמית על מעבד">
+          <rect class="ln" x="24" y="104" width="60" height="52" rx="2"/>
+          <rect class="dim" x="34" y="114" width="40" height="32" rx="1"/>
+          <path class="hair" d="M24 162 H84 M28 162 V168 M40 162 V168 M52 162 V168 M64 162 V168 M76 162 V168"/>
+          <circle class="ln" cx="54" cy="128" r="7"/>
+          <path class="ln" d="M48 34 H60 V78 L57 88 H51 L48 78 Z"/>
+          <path class="dim" d="M51 88 q3 8 3 14"/>
+        </svg>
+        <span class="slug">07</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:09.2</span><span class="dur">1.2s</span></div>
+        <h3>משחה תרמית</h3>
+        <p>נקודה אפורה מבריקה יורדת על ה־CPU.</p>
+        <span class="chip chip--real">REAL</span>
+      </figcaption>
+    </figure>
+
+    <!-- 08 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="מסך המציג בריאות סוללה מאה אחוז">
+          <rect class="ln" x="12" y="58" width="84" height="76" rx="2"/>
+          <text class="mono-s" x="54" y="92" font-size="18" text-anchor="middle">100%</text>
+          <text class="mono-s" x="54" y="106" font-size="6.5" text-anchor="middle" letter-spacing="1.4">BATTERY HEALTH</text>
+          <rect class="dim" x="28" y="114" width="52" height="6" rx="1"/>
+          <rect class="fill-glow" x="28" y="114" width="52" height="6" rx="1"/>
+          <path class="hair" d="M12 142 H96"/>
+        </svg>
+        <span class="slug">08</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:10.4</span><span class="dur">1.2s</span></div>
+        <h3>בריאות סוללה</h3>
+        <p>הקלטת מסך, לא צילום מסך במצלמה.</p>
+        <span class="chip chip--real">REAL</span>
+      </figcaption>
+    </figure>
+
+    <!-- 09 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="מטריצת לוחות בדיקה על המסך">
+          <rect class="ln" x="12" y="56" width="84" height="80" rx="2"/>
+          <path class="dim" d="M40 56 V136 M68 56 V136 M12 83 H96 M12 110 H96"/>
+          <rect class="fill-dim" x="12" y="56" width="28" height="27"/>
+          <rect class="fill-glow" x="68" y="83" width="28" height="27"/>
+          <rect class="fill-dim" x="40" y="110" width="28" height="26"/>
+          <circle class="dot" cx="54" cy="70" r="1"/><circle class="dot" cx="80" cy="124" r="1"/>
+          <path class="hair" d="M12 144 H96"/>
+        </svg>
+        <span class="slug">09</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:11.6</span><span class="dur">1.4s</span></div>
+        <h3>מטריצת בדיקות</h3>
+        <p>לוחות מתחלפים במהירות. מונטאז׳ פנימי.</p>
+        <span class="chip chip--real">REAL</span>
+      </figcaption>
+    </figure>
+
+    <!-- 10 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="פרופיל צד של מקשים, אצבע לוחצת מקש">
+          <path class="ln" d="M6 128 H102"/>
+          <rect class="dim" x="10" y="112" width="16" height="16" rx="2"/>
+          <rect class="dim" x="30" y="112" width="16" height="16" rx="2"/>
+          <rect class="ln"  x="50" y="112" width="16" height="16" rx="2"/>
+          <rect class="dim" x="70" y="112" width="16" height="16" rx="2"/>
+          <polygon class="fill-glow" points="42,86 74,86 66,132 34,132"/>
+          <path class="hot" d="M50 100 H70 M64 94 L70 100 L64 106" opacity=".9"/>
+          <path class="hair" d="M0 148 H108"/>
+        </svg>
+        <span class="slug">10</span><span class="move">SWEEP R</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:13.0</span><span class="dur">1.0s</span></div>
+        <h3>גל על המקשים</h3>
+        <p>אור עובר שורה אחרי שורה. המקלדת מגיבה, לא אצבע.</p>
+        <span class="chip chip--hyb">AI + COMP</span>
+      </figcaption>
+    </figure>
+
+  </div>
+
+  <!-- ============ ACT 3 ============ -->
+  <div class="act">
+    <span class="tc">00:14 — 00:20</span>
+    <h2>החריטה</h2>
+    <span class="desc">המוזיקה נופלת. שני שוטים בלבד, 3 שניות כל אחד. פתאום יש זמן.</span>
+  </div>
+
+  <div class="board">
+
+    <!-- 11 -->
+    <figure>
+      <div class="frame frame--hero">
+        <svg viewBox="0 0 108 192" role="img" aria-label="ראש לייזר חורט אות עברית על מקש, עשן עולה">
+          <rect class="ln" x="26" y="118" width="56" height="48" rx="5"/>
+          <text class="he-hot" x="54" y="152" font-size="30" text-anchor="middle">א</text>
+          <path class="ln" d="M38 30 H70 V54 L58 66 H50 L38 54 Z"/>
+          <path class="dim" d="M46 66 H62"/>
+          <path class="hot" d="M54 66 V116" stroke-width="2.2"/>
+          <ellipse class="fill-glow" cx="54" cy="120" rx="18" ry="7"/>
+          <path class="dim" d="M66 112 q8 -14 2 -24 q-4 -8 4 -16"/>
+          <path class="hair" d="M74 106 q6 -12 1 -20"/>
+        </svg>
+        <span class="slug">11</span><span class="move">STATIC · 120FPS</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:14.0</span><span class="dur">3.0s</span></div>
+        <h3>החריטה</h3>
+        <p>מייצרים מקש ריק. האות היא שכבת טקסט שנחשפת ב־wipe מסונכרן לקרן.</p>
+        <span class="chip chip--hyb">AI + COMP · הליבה</span>
+      </figcaption>
+    </figure>
+
+    <!-- 12 -->
+    <figure>
+      <div class="frame frame--hero">
+        <svg viewBox="0 0 108 192" role="img" aria-label="המקלדת המלאה נחשפת עם אותיות עבריות">
+          <rect class="ln" x="8" y="62" width="92" height="68" rx="3"/>
+          <g class="dim">
+            <rect x="14" y="68" width="12" height="12" rx="1.5"/><rect x="29" y="68" width="12" height="12" rx="1.5"/>
+            <rect x="44" y="68" width="12" height="12" rx="1.5"/><rect x="59" y="68" width="12" height="12" rx="1.5"/>
+            <rect x="74" y="68" width="12" height="12" rx="1.5"/>
+            <rect x="14" y="83" width="12" height="12" rx="1.5"/><rect x="29" y="83" width="12" height="12" rx="1.5"/>
+            <rect x="44" y="83" width="12" height="12" rx="1.5"/><rect x="59" y="83" width="12" height="12" rx="1.5"/>
+            <rect x="74" y="83" width="12" height="12" rx="1.5"/>
+            <rect x="14" y="98" width="12" height="12" rx="1.5"/><rect x="29" y="98" width="12" height="12" rx="1.5"/>
+            <rect x="44" y="98" width="12" height="12" rx="1.5"/><rect x="59" y="98" width="12" height="12" rx="1.5"/>
+            <rect x="74" y="98" width="12" height="12" rx="1.5"/>
+            <rect x="20" y="113" width="60" height="10" rx="1.5"/>
+          </g>
+          <g class="he" font-size="8">
+            <text x="20" y="78" text-anchor="middle">ק</text><text x="35" y="78" text-anchor="middle">ר</text>
+            <text x="50" y="78" text-anchor="middle">א</text><text x="65" y="78" text-anchor="middle">ט</text>
+            <text x="80" y="78" text-anchor="middle">ו</text>
+            <text x="20" y="93" text-anchor="middle">ש</text><text x="35" y="93" text-anchor="middle">ד</text>
+            <text x="50" y="93" text-anchor="middle">ג</text><text x="65" y="93" text-anchor="middle">כ</text>
+            <text x="80" y="93" text-anchor="middle">ע</text>
+            <text x="20" y="108" text-anchor="middle">ז</text><text x="35" y="108" text-anchor="middle">ס</text>
+            <text x="50" y="108" text-anchor="middle">ב</text><text x="65" y="108" text-anchor="middle">ה</text>
+            <text x="80" y="108" text-anchor="middle">נ</text>
+          </g>
+          <path class="hot" d="M54 146 V166 M48 158 L54 166 L60 158"/>
+          <path class="hot" d="M20 156 H88" opacity=".4"/>
+        </svg>
+        <span class="slug">12</span><span class="move">PULL BACK</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:17.0</span><span class="dur">3.0s</span></div>
+        <h3>המקלדת נחשפת</h3>
+        <p>העברית מולבשת על הסטיל לפני האנימציה, ואז I2V מהתמונה המתוקנת.</p>
+        <span class="chip chip--hyb">AI + COMP · הליבה</span>
+      </figcaption>
+    </figure>
+
+  </div>
+
+  <!-- ============ ACT 4 ============ -->
+  <div class="act">
+    <span class="tc">00:20 — 00:35</span>
+    <h2>לידה מחדש</h2>
+    <span class="desc">המוזיקה חוזרת מלאה. קצב בינוני, ואז נחיתה.</span>
+  </div>
+
+  <div class="board">
+
+    <!-- 13 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="מטלית מיקרופייבר מלטשת את מכסה המחשב">
+          <rect class="ln" x="12" y="74" width="84" height="54" rx="3"/>
+          <polygon class="fill-glow" points="20,74 44,74 30,128 6,128"/>
+          <path class="ln" d="M52 62 q16 -8 28 2 q10 8 0 18 q-12 10 -26 2 q-10 -6 -2 -22 Z"/>
+          <path class="dim" d="M58 70 q10 -4 18 2"/>
+          <path class="hot" d="M84 100 H26 M34 94 L26 100 L34 106"/>
+        </svg>
+        <span class="slug">13</span><span class="move">SWEEP L</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:20.0</span><span class="dur">1.5s</span></div>
+        <h3>ליטוש</h3>
+        <p>גל ברק נע אחרי המטלית.</p>
+        <span class="chip chip--ai">AI · I2V</span>
+      </figcaption>
+    </figure>
+
+    <!-- 14 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="פרופיל צד, המכסה נסגר">
+          <path class="ln" d="M10 128 H96 L98 134 H8 Z"/>
+          <path class="ln" d="M14 122 L84 96"/>
+          <path class="dim" d="M14 116 L80 78"/>
+          <path class="hair" d="M14 110 L76 62"/>
+          <circle class="ln" cx="14" cy="124" r="3"/>
+          <path class="hot" d="M88 74 q10 22 4 40 M86 108 l6 8 l4 -10"/>
+          <path class="hot" d="M20 126 H90" opacity=".35"/>
+        </svg>
+        <span class="slug">14</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:21.5</span><span class="dur">1.5s</span></div>
+        <h3>סגירה</h3>
+        <p>קו התפר נפגש בדיוק מוחלט. הילוך איטי.</p>
+        <span class="chip chip--ai">AI · I2V</span>
+      </figcaption>
+    </figure>
+
+    <!-- 15 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="שוט גיבור, המחשב הסגור מסתובב על רקע שחור">
+          <polygon class="ln" points="18,92 74,80 92,98 36,112"/>
+          <path class="ln" d="M18 92 V102 L36 120 V112"/>
+          <path class="ln" d="M92 98 V108 L36 120"/>
+          <path class="dim" d="M22 96 L74 85"/>
+          <ellipse class="hair" cx="54" cy="132" rx="46" ry="12"/>
+          <path class="dim" d="M28 138 L44 126 M62 140 L78 128" opacity=".25"/>
+          <path class="hot" d="M20 154 q34 14 68 0" />
+          <path class="hot" d="M82 148 L88 154 L82 160"/>
+        </svg>
+        <span class="slug">15</span><span class="move">ORBIT</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:23.0</span><span class="dur">2.0s</span></div>
+        <h3>שוט גיבור</h3>
+        <p>אור מקיף מצייר את הקצוות. שחור מוחלט מסביב.</p>
+        <span class="chip chip--ai">AI · I2V</span>
+      </figcaption>
+    </figure>
+
+    <!-- 16 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="לחיצה על כפתור הפעלה, המסך מתעורר">
+          <rect class="ln" x="16" y="40" width="76" height="60" rx="2"/>
+          <rect class="fill-glow" x="16" y="40" width="76" height="60"/>
+          <path class="ln" d="M12 112 H96 L100 120 H8 Z"/>
+          <circle class="hot" cx="76" cy="106" r="5"/>
+          <circle class="fill-glow" cx="76" cy="106" r="11"/>
+          <circle class="hot" cx="76" cy="106" r="16" opacity=".28"/>
+          <circle class="hot" cx="76" cy="106" r="22" opacity=".14"/>
+          <path class="hair" d="M0 150 H108"/>
+        </svg>
+        <span class="slug">16</span><span class="move">PUSH IN</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:25.0</span><span class="dur">2.0s</span></div>
+        <h3>התעוררות</h3>
+        <p>הכפתור נדלק מעצמו, המסך אחריו. הממשק מולבש בעריכה.</p>
+        <span class="chip chip--hyb">AI + COMP</span>
+      </figcaption>
+    </figure>
+
+    <!-- 17 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="שולחן אמיתי, אדם מקליד, אור חלון חם">
+          <polygon class="fill-glow" points="0,14 30,14 22,126 0,126"/>
+          <rect class="hair" x="2" y="16" width="26" height="96" rx="1"/>
+          <path class="ln" d="M0 130 H108"/>
+          <path class="ln" d="M34 130 L40 104 H72 L78 130"/>
+          <path class="dim" d="M40 104 H72"/>
+          <path class="ln" d="M42 104 L46 74 H68 L72 104"/>
+          <path class="hair" d="M48 96 H66 M48 90 H62"/>
+          <path class="ln" d="M84 118 h12 v10 a6 6 0 0 1 -6 6 h0 a6 6 0 0 1 -6 -6 Z"/>
+          <path class="dim" d="M96 121 q5 1 5 5 q0 4 -5 5"/>
+          <path class="dim" d="M88 112 q4 -8 0 -14 M93 112 q4 -8 0 -14"/>
+          <path class="hair" d="M0 146 H108" opacity=".12"/>
+        </svg>
+        <span class="slug">17</span><span class="move">PUSH IN</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:27.0</span><span class="dur">4.0s</span></div>
+        <h3>חיים</h3>
+        <p>שולחן ריק, אור בוקר, אדי קפה. אף אחד בפריים — הצופה ממלא את החסר.</p>
+        <span class="chip chip--ai">AI</span>
+      </figcaption>
+    </figure>
+
+    <!-- 18 -->
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 108 192" role="img" aria-label="כרטיס סיום, לוגו וקו המסר">
+          <rect class="dim" x="40" y="52" width="28" height="28" rx="4"/>
+          <text class="mono-s" x="54" y="71" font-size="7" text-anchor="middle" letter-spacing="1">LOGO</text>
+          <text class="he" x="54" y="106" font-size="11" text-anchor="middle">לא חדש.</text>
+          <text class="he-hot" x="54" y="120" font-size="11" text-anchor="middle">חדש לגמרי.</text>
+          <path class="hot" d="M32 130 H76" opacity=".55"/>
+          <text class="he" x="54" y="143" font-size="6.5" text-anchor="middle" opacity=".8">3 שנות אחריות · 45 יום ניסיון</text>
+          <text class="mono-s" x="54" y="156" font-size="5.5" text-anchor="middle" letter-spacing=".8">URL</text>
+        </svg>
+        <span class="slug">18</span><span class="move">STATIC</span>
+      </div>
+      <figcaption>
+        <div class="cap-top"><span>00:31.0</span><span class="dur">4.0s</span></div>
+        <h3>כרטיס סיום</h3>
+        <p>קו המסר, ומתחתיו ההצעה כהוכחה לו. שחור מלא.</p>
+        <span class="chip chip--gfx">GFX</span>
+      </figcaption>
+    </figure>
+
+  </div>
+
+  <!-- ============ READING NOTES ============ -->
+  <div class="callout">
+    <h3>איך קוראים את הלוח ביום הצילום</h3>
+    <ul class="plain">
+      <li><strong>התווית בפינה השמאלית־תחתונה</strong> היא תנועת המצלמה, ויש רק אחת לכל שוט. <code>STATIC</code> אומר שהמצלמה לא זזה בכלל — במאקרו זו ברירת המחדל הנכונה.</li>
+      <li><strong>שני הפריימים בגבול כתום</strong> (11 ו־12) הם הליבה, והיחידים שדורשים עבודת שכבות אמיתית. אם רק הם ייצאו מצוין והשאר סבירים — הסרטון עובד. הפוך, לא.</li>
+      <li><strong>אין ידיים באף פריים.</strong> ארבעה שוטים עוצבו מחדש בלי אצבעות, כי אצבעות במאקרו הן הדבר השני שמודלי וידאו הכי מקלקלים.</li>
+      <li><strong>הקומפוזיציה נבנתה ל־9:16.</strong> המוצר תמיד חוצה את מרכז הפריים לרוחב, כי בפורמט אנכי יש מעט רוחב ואסור לבזבז אותו על אוויר בצדדים.</li>
+      <li><strong>המקשים ריקים בכוונה</strong> בכל פריים שבו נראית מקלדת. את האותיות מוסיפים אחר כך — אף פעם לא נותנים למודל לכתוב עברית.</li>
+      <li><strong>הקצה התחתון של כל פריים</strong> נשאר ריק בכוונה — שם יושבים כפתורי הממשק של אינסטגרם וטיקטוק, ושום דבר חשוב לא נכנס לשם.</li>
+    </ul>
+  </div>
+
+</div>

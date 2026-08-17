@@ -1,0 +1,497 @@
+<meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+const C = document.getElementById('c');
+const X = C.getContext('2d');
+const Q = new URLSearchParams(location.search);
+const W = +(Q.get('w') || 1080), H = +(Q.get('h') || 1920);
+const SQ = H / W < 1.3;                    // square / landscape reflow
+C.width = W; C.height = H;
+
+/* ---------- palette ---------- */
+const BG='#0A0A09', INK='#EDE7DE', HOT='#F2803D', WARM='#E8B478';
+const ink=a=>`rgba(237,231,222,${a})`;
+const hot=a=>`rgba(242,128,61,${a})`;
+const warm=a=>`rgba(232,180,120,${a})`;
+
+/* ---------- math ---------- */
+const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const lp=(a,b,t)=>a+(b-a)*t;
+const eIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const eO =t=>1-Math.pow(1-t,3);
+const eO5=t=>1-Math.pow(1-t,5);
+const eI =t=>t*t*t;
+// progress within [s,e]
+const P=(t,s,e)=>cl((t-s)/(e-s));
+// fade in/out envelope
+const env=(t,s,e,fi=.25,fo=.25)=>Math.min(P(t,s,s+fi), 1-P(t,e-fo,e));
+
+/* deterministic noise */
+let _s=1;
+const srnd=()=>{_s=(_s*1103515245+12345)&0x7fffffff;return _s/0x7fffffff};
+const seed=n=>{_s=n||1};
+
+const F=(w,s)=>`${w} ${s}px "DejaVu Sans", sans-serif`;
+
+/* ---------- primitives ---------- */
+function rr(x,y,w,h,r){
+  X.beginPath();
+  X.moveTo(x+r,y);X.lineTo(x+w-r,y);X.quadraticCurveTo(x+w,y,x+w,y+r);
+  X.lineTo(x+w,y+h-r);X.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  X.lineTo(x+r,y+h);X.quadraticCurveTo(x,y+h,x,y+h-r);
+  X.lineTo(x,y+r);X.quadraticCurveTo(x,y,x+r,y);X.closePath();
+}
+function stroke(c,w){X.strokeStyle=c;X.lineWidth=w;X.lineCap='round';X.lineJoin='round';X.stroke();}
+function poly(pts){X.beginPath();pts.forEach((p,i)=>i?X.lineTo(p[0],p[1]):X.moveTo(p[0],p[1]));X.closePath();}
+function line(x1,y1,x2,y2,c,w){X.beginPath();X.moveTo(x1,y1);X.lineTo(x2,y2);stroke(c,w);}
+
+/* a raking light band, angle from vertical */
+function sweep(cx, width, alpha, skew=140){
+  const g=X.createLinearGradient(cx-width/2,0,cx+width/2,0);
+  g.addColorStop(0,'rgba(237,231,222,0)');
+  g.addColorStop(.5,`rgba(237,231,222,${alpha})`);
+  g.addColorStop(1,'rgba(237,231,222,0)');
+  X.fillStyle=g;
+  poly([[cx-width/2+skew,0],[cx+width/2+skew,0],[cx+width/2-skew,H],[cx-width/2-skew,H]]);
+  X.fill();
+}
+function glowDot(x,y,r,c1,a){
+  const g=X.createRadialGradient(x,y,0,x,y,r);
+  g.addColorStop(0,c1(a)); g.addColorStop(1,c1(0));
+  X.fillStyle=g; X.beginPath(); X.arc(x,y,r,0,7); X.fill();
+}
+function hebrew(txt,x,y,size,color,weight=700,align='center',alpha=1){
+  X.save(); X.globalAlpha*=alpha; X.direction='rtl'; X.textAlign=align;
+  X.font=F(weight,size); X.fillStyle=color; X.fillText(txt,x,y); X.restore();
+}
+function mono(txt,x,y,size,color,align='center',sp=0,alpha=1){
+  X.save(); X.globalAlpha*=alpha; X.textAlign=align;
+  X.font=`500 ${size}px "DejaVu Sans Mono", monospace`; X.fillStyle=color;
+  if(sp){ // manual letterspacing
+    X.textAlign='left';
+    const total=[...txt].reduce((a,ch)=>a+X.measureText(ch).width+sp,0)-sp;
+    let cx = align==='center'? x-total/2 : x;
+    for(const ch of txt){X.fillText(ch,cx,y);cx+=X.measureText(ch).width+sp;}
+  } else X.fillText(txt,x,y);
+  X.restore();
+}
+
+/* laptop slab, pseudo-3D closed, yaw in radians */
+function slab(cx,cy,w,d,th,yaw,alpha=1){
+  const c=Math.cos(yaw), s=Math.sin(yaw);
+  const hw=w/2, hd=d/2;
+  const p=(x,z)=>[cx + x*c - z*s*0.42, cy + (x*s + z*c)*0.30];
+  const tl=p(-hw,-hd), tr=p(hw,-hd), br=p(hw,hd), bl=p(-hw,hd);
+  X.save(); X.globalAlpha*=alpha;
+  // side faces
+  X.fillStyle='rgba(237,231,222,0.05)';
+  poly([bl,br,[br[0],br[1]+th],[bl[0],bl[1]+th]]); X.fill();
+  poly([tr,br,[br[0],br[1]+th],[tr[0],tr[1]+th]]); X.fill();
+  // top face
+  X.fillStyle='rgba(237,231,222,0.035)';
+  poly([tl,tr,br,bl]); X.fill();
+  poly([tl,tr,br,bl]); stroke(ink(.85),3);
+  // bottom edge outline
+  poly([bl,br,[br[0],br[1]+th],[bl[0],bl[1]+th]]); stroke(ink(.5),2.4);
+  X.restore();
+  return {tl,tr,br,bl};
+}
+
+/* keyboard: rows of keys, optional hebrew letters with reveal 0..1 */
+const ROWS=[['ק','ר','א','ט','ו','ן','ם','פ'],
+            ['ש','ד','ג','כ','ע','י','ח','ל'],
+            ['ז','ס','ב','ה','נ','מ','צ','ת']];
+function keyboard(cx,cy,kw,gap,reveal,letterA=1,keyLight=-1){
+  const cols=8, rows=3;
+  const totalW=cols*kw+(cols-1)*gap;
+  const x0=cx-totalW/2, y0=cy-(rows*kw+(rows-1)*gap)/2;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    const x=x0+c*(kw+gap), y=y0+r*(kw+gap);
+    let lit=0;
+    if(keyLight>=0){ const d=Math.abs((x+kw/2)-(x0+keyLight*totalW)); lit=cl(1-d/(kw*2.2)); }
+    rr(x,y,kw,kw,kw*0.16);
+    X.fillStyle=`rgba(237,231,222,${0.03+lit*0.22})`; X.fill();
+    stroke(ink(0.20+lit*0.5),2);
+    const idx=r*cols+c, need=idx/(rows*cols);
+    const a=cl((reveal-need)*7)*letterA;
+    if(a>0.01) hebrew(ROWS[r][c], x+kw/2, y+kw*0.72, kw*0.56, ink(.92), 700,'center',a);
+  }
+  // spacebar
+  const sy=y0+rows*(kw+gap);
+  rr(cx-totalW*0.32, sy, totalW*0.64, kw*0.72, kw*0.14);
+  X.fillStyle='rgba(237,231,222,0.03)'; X.fill(); stroke(ink(.20),2);
+  return {x0,y0,totalW};
+}
+
+/* ---------- shots ---------- */
+function s01(t){ // 0-2 arrival: sealed bag, light sweep
+  const p=P(t,0,2);
+  X.save();
+  const bx=W/2-300, by=H/2-230, bw=600, bh=460;
+  rr(bx,by,bw,bh,26); X.fillStyle='rgba(237,231,222,0.022)'; X.fill(); stroke(ink(.30),2.4);
+  // crinkle
+  for(let i=0;i<5;i++){const y=by+50+i*88; line(bx+30,y+Math.sin(i)*8,bx+bw-30,y-Math.cos(i)*10,ink(.07),2);}
+  // laptop inside
+  rr(bx+64,by+96,bw-128,bh-200,8); stroke(ink(.52),3);
+  line(bx+64,by+96+(bh-200)/2, bx+bw-64, by+96+(bh-200)/2, ink(.22),2);
+  sweep(lp(-260,W+260,eIO(p)), 420, .13);
+  X.restore();
+}
+function s02(t){ // 2-3.5 bag opens, laptop slides out
+  const p=P(t,2,3.5), e=eO(p);
+  const bx=W/2-300, by=H/2-380, bw=600, bh=330;
+  rr(bx,by,bw,bh,26); X.fillStyle='rgba(237,231,222,0.02)'; X.fill(); stroke(ink(.26),2.4);
+  // opening flap
+  X.save(); X.translate(bx,by+bh); X.rotate(-0.9*e);
+  rr(0,0,bw,54,14); X.fillStyle='rgba(237,231,222,0.03)'; X.fill(); stroke(ink(.30),2.2); X.restore();
+  // slab sliding out
+  const sy=lp(by+bh-140, by+bh+300, e);
+  rr(W/2-268, sy, 536, 132, 10);
+  X.fillStyle='rgba(237,231,222,0.04)'; X.fill(); stroke(ink(.8),3);
+  line(W/2-268, sy+66, W/2+268, sy+66, ink(.22),2);
+  glowDot(W/2, sy+66, 420, ink, .05*e);
+  line(120,by+bh+330,W-120,by+bh+330,ink(.14),2);
+}
+function s03(t){ // 3.5-5 top-down landing + dust
+  const p=P(t,3.5,5);
+  // light shaft
+  X.fillStyle='rgba(242,128,61,0.035)';
+  poly([[W*0.16,0],[W*0.60,0],[W*0.78,H],[W*0.05,H]]); X.fill();
+  const w=620,h=600, x=W/2-w/2, y=H/2-h/2+lp(30,0,eO(p));
+  rr(x,y,w,h,10); X.fillStyle='rgba(237,231,222,0.03)'; X.fill(); stroke(ink(.8),3);
+  line(x,y+h*0.42,x+w,y+h*0.42,ink(.30),2.4);   // hinge
+  rr(x+90,y+h*0.55,w-180,h*0.30,8); stroke(ink(.18),2);
+  seed(7);
+  for(let i=0;i<70;i++){
+    const bx=srnd(), by=srnd(), sp=.25+srnd()*.8;
+    const py=(by*H - (t-3.5)*46*sp + H)%H;
+    const px=W*0.10+bx*W*0.72 + Math.sin(py*0.01+i)*14;
+    X.fillStyle=ink(.10+srnd()*.30); X.beginPath(); X.arc(px,py,1.1+srnd()*2.4,0,7); X.fill();
+  }
+}
+function s04(t){ // 5-6.5 screw macro
+  const p=P(t,5,6.5), rot=eIO(p)*1.15;
+  X.save(); X.translate(W/2, H*0.60);
+  X.rotate(rot);
+  X.beginPath(); X.arc(0,0,300,0,7); stroke(ink(.75),4);
+  X.beginPath(); X.arc(0,0,232,0,7); stroke(ink(.22),2.4);
+  line(-150,0,150,0,ink(.85),16);
+  line(-150,0,150,0,'rgba(10,10,9,1)',6);
+  X.restore();
+  // driver blade
+  X.save(); X.translate(W/2, H*0.60); X.rotate(rot);
+  poly([[-140,-980],[140,-980],[96,-40],[-96,-40]]);
+  X.fillStyle='rgba(237,231,222,0.05)'; X.fill(); stroke(ink(.65),3.4);
+  X.restore();
+  glowDot(W/2,H*0.60,360,ink,.05);
+}
+function s05(t){ // 6.5-8 panel lifts
+  const p=P(t,6.5,8), e=eO(p);
+  const bx=W/2-330, by=H*0.50, bw=660, bh=470;
+  rr(bx,by,bw,bh,12); X.fillStyle='rgba(237,231,222,0.025)'; X.fill(); stroke(ink(.7),3);
+  // internals
+  X.save(); X.translate(bx+180, by+180);
+  X.beginPath(); X.arc(0,0,110,0,7); stroke(ink(.34),2.6);
+  for(let i=0;i<7;i++){X.save();X.rotate(i*Math.PI*2/7 + t*2.0);
+    X.beginPath();X.moveTo(0,0);X.quadraticCurveTo(70,-34,104,16);stroke(ink(.20),2.4);X.restore();}
+  X.beginPath(); X.arc(0,0,26,0,7); stroke(ink(.30),2.2); X.restore();
+  rr(bx+350,by+90,240,190,8); stroke(ink(.28),2.4);
+  for(let i=0;i<3;i++) line(bx+350,by+320+i*32,bx+590-i*44,by+320+i*32,ink(.20),2.4);
+  // light spill
+  X.globalAlpha=e; glowDot(bx+bw/2, by+bh/2, 480, ink, .10); X.globalAlpha=1;
+  // lifting panel
+  X.save(); X.translate(W/2, by-lp(0,250,e)); X.rotate(-0.16*e);
+  const s=lp(1,1.05,e);
+  poly([[-bw/2*s,-40],[bw/2*s,-70],[bw/2*s,52],[-bw/2*s,84]]);
+  X.fillStyle='rgba(10,10,9,0.92)'; X.fill(); stroke(ink(.75),3); X.restore();
+}
+function s06(t){ // 8-9.2 fan + brush + dust
+  const p=P(t,8,9.2);
+  X.save(); X.translate(W*0.46,H*0.56);
+  X.beginPath(); X.arc(0,0,330,0,7); stroke(ink(.68),3.4);
+  X.beginPath(); X.arc(0,0,86,0,7); stroke(ink(.30),2.4);
+  for(let i=0;i<9;i++){X.save();X.rotate(i*Math.PI*2/9 + t*3.4);
+    X.beginPath();X.moveTo(0,-86);X.quadraticCurveTo(190,-140,300,30);stroke(ink(.26),2.6);X.restore();}
+  X.restore();
+  // brush
+  const bxp=lp(-0.1,1.1,eIO(p));
+  X.save(); X.translate(lp(W*0.05,W*0.95,eIO(p)), H*0.40); X.rotate(0.5);
+  rr(-120,-46,240,92,10); X.fillStyle='rgba(237,231,222,0.05)'; X.fill(); stroke(ink(.6),3);
+  for(let i=0;i<8;i++) line(-110+i*30,46,-118+i*30,120,ink(.24),2.4);
+  X.restore();
+  seed(21);
+  for(let i=0;i<80;i++){
+    const a=srnd()*7, r=200+srnd()*520, sp=.5+srnd();
+    const px=W*0.46+Math.cos(a)*r*(1+p*sp*.5), py=H*0.56+Math.sin(a)*r*(1+p*sp*.5)-p*120*sp;
+    X.fillStyle=ink(.08+srnd()*.26); X.beginPath(); X.arc(px,py,1+srnd()*2.6,0,7); X.fill();
+  }
+}
+function s07(t){ // 9.2-10.4 thermal paste
+  const p=P(t,9.2,10.4);
+  const cx=W/2, cy=H*0.62;
+  rr(cx-300,cy-190,600,420,6); X.fillStyle='rgba(237,231,222,0.028)'; X.fill(); stroke(ink(.62),3);
+  rr(cx-190,cy-110,380,270,4); stroke(ink(.26),2.4);
+  for(let i=0;i<9;i++) line(cx-260+i*65,cy+230,cx-260+i*65,cy+276,ink(.22),2.4);
+  // syringe
+  const tip=lp(cy-620, cy-250, eIO(cl(p*1.6)));
+  poly([[cx-52,tip-420],[cx+52,tip-420],[cx+30,tip],[cx-30,tip]]);
+  X.fillStyle='rgba(237,231,222,0.05)'; X.fill(); stroke(ink(.6),3);
+  // droplet falls then spreads
+  const dp=P(t,9.75,10.4);
+  if(dp<=0){ const dy=lp(tip+20,cy-10,eI(cl((t-9.5)/0.28)));
+    X.beginPath(); X.arc(cx,dy,20,0,7); X.fillStyle=ink(.55); X.fill(); }
+  else { const r=lp(20,64,eO(dp));
+    X.beginPath(); X.arc(cx,cy-10,r,0,7); X.fillStyle=ink(.42); X.fill(); stroke(ink(.8),2.6);
+    glowDot(cx-r*0.3,cy-10-r*0.3,r*0.9,ink,.35); }
+}
+function s08(t){ // 10.4-11.6 battery health
+  const p=P(t,10.4,11.6);
+  const sx=W/2-390, sy=H*0.34, sw=780, sh=680;
+  rr(sx,sy,sw,sh,8); X.fillStyle='rgba(237,231,222,0.035)'; X.fill(); stroke(ink(.5),3);
+  mono('100%', W/2, sy+330, 168, ink(.95),'center',6);
+  mono('BATTERY HEALTH', W/2, sy+412, 34, ink(.45),'center',9);
+  const bw=520, bx=W/2-bw/2, by=sy+486;
+  rr(bx,by,bw,26,13); stroke(ink(.28),2.4);
+  rr(bx,by,bw*eO(cl(p*1.5)),26,13); X.fillStyle=hot(.7); X.fill();
+  mono('CYCLES  142', W/2, sy+590, 30, ink(.35),'center',7);
+  glowDot(W/2, sy+sh/2, 620, ink, .05);
+}
+function s09(t){ // 11.6-13 test matrix
+  const p=P(t,11.6,13);
+  const sx=W/2-390, sy=H*0.34, sw=780, sh=680;
+  rr(sx,sy,sw,sh,8); X.fillStyle='rgba(237,231,222,0.03)'; X.fill(); stroke(ink(.5),3);
+  X.save(); rr(sx,sy,sw,sh,8); X.clip();
+  const n=3, cw=sw/n, ch=sh/n;
+  seed(5);
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){
+    const i=r*n+c, ph=(p*3.2+i*0.11)%1;
+    const a=0.04+Math.pow(Math.sin(ph*Math.PI),2)*0.30;
+    X.fillStyle = (i%4===0)? hot(a*0.8) : ink(a);
+    X.fillRect(sx+c*cw, sy+r*ch, cw-3, ch-3);
+  }
+  const ly=sy+((p*2.4)%1)*sh;
+  X.fillStyle=ink(.16); X.fillRect(sx,ly,sw,4);
+  X.restore();
+  stroke(ink(.5),3);
+  mono('DISPLAY  ·  PIXEL MAP  ·  I/O', W/2, sy+sh+66, 28, ink(.40),'center',7);
+}
+function s10(t){ // 13-14 light wave over keys
+  const p=P(t,13,14);
+  keyboard(W/2, H*0.55, 104, 18, 0, 0, eIO(p));
+  const gx=lp(-0.2,1.2,eIO(p));
+  sweep(lp(W*0.16,W*0.84,eIO(p)), 300, .10, 40);
+}
+function s11(t){ // 14-17 THE ENGRAVING
+  const p=P(t,14,17);
+  const kx=W/2, ky=H*0.60, ks=420;
+  // keycap
+  rr(kx-ks/2, ky-ks/2, ks, ks, 46);
+  X.fillStyle='rgba(237,231,222,0.035)'; X.fill(); stroke(ink(.62),3.4);
+  // laser head
+  const travel=cl((p-0.10)/0.62);
+  const hx=lp(kx-140, kx+140, eIO(travel));
+  const hy=ky-ks/2-300;
+  poly([[hx-90,hy-230],[hx+90,hy-230],[hx+52,hy+60],[hx-52,hy+60]]);
+  X.fillStyle='rgba(10,10,9,.9)'; X.fill(); stroke(ink(.7),3.4);
+  line(hx-52,hy+60,hx+52,hy+60,ink(.4),2.4);
+  // beam
+  if(p>0.08&&p<0.80){
+    const bA=0.85*Math.min(1,(p-0.08)*14)*Math.min(1,(0.80-p)*14);
+    line(hx, hy+60, hx, ky-ks/2+40, hot(bA), 5);
+    line(hx, hy+60, hx, ky-ks/2+40, hot(bA*.35), 16);
+    glowDot(hx, ky-ks/2+46, 150, hot, bA*.55);
+  }
+  // letter revealed under the beam
+  X.save();
+  X.beginPath(); X.rect(kx-260, ky-260, cl((hx-(kx-160))/280)*520, 520); X.clip();
+  hebrew('א', kx, ky+118, 320, hot(1));
+  X.restore();
+  // afterglow settles to ink
+  if(p>0.78){ const a=P(t,16.34,17); X.save(); X.globalAlpha=a*0.9;
+    hebrew('א', kx, ky+118, 320, ink(1)); X.restore(); }
+  // smoke
+  seed(31);
+  for(let i=0;i<16;i++){
+    const life=((t-14)*0.5+srnd())%1;
+    const sx2=hx+(srnd()-.5)*70, sy2=ky-ks/2+40-life*560;
+    X.beginPath();
+    X.moveTo(sx2, sy2);
+    X.quadraticCurveTo(sx2+Math.sin(life*7+i)*46, sy2-90, sx2+Math.sin(life*4+i)*70, sy2-190);
+    stroke(ink(.13*(1-life)), 3);
+  }
+}
+function s12(t){ // 17-20 keyboard reveal, pull back
+  const p=P(t,17,20);
+  const sc=lp(2.25,1.0,eO5(p));
+  X.save(); X.translate(W/2,H*0.55); X.scale(sc,sc); X.translate(-W/2,-H*0.55);
+  keyboard(W/2, H*0.55, 104, 18, cl(p*1.5), 1, -1);
+  X.restore();
+  sweep(lp(W*1.1,W*-0.1,eIO(p)), 520, .07, 60);
+  glowDot(W/2,H*0.55,760,ink,.035);
+}
+function s13(t){ // 20-21.5 polish
+  const p=P(t,20,21.5), e=eIO(p);
+  const lx=W/2-360, ly=H*0.46, lw=720, lh=520;
+  rr(lx,ly,lw,lh,16); X.fillStyle='rgba(237,231,222,0.03)'; X.fill(); stroke(ink(.72),3.4);
+  X.save(); rr(lx,ly,lw,lh,16); X.clip();
+  const gx=lp(lx+lw+180, lx-180, e);
+  const g=X.createLinearGradient(gx-200,0,gx+200,0);
+  g.addColorStop(0,'rgba(237,231,222,0)');g.addColorStop(.5,'rgba(237,231,222,0.20)');g.addColorStop(1,'rgba(237,231,222,0)');
+  X.fillStyle=g; X.fillRect(lx,ly,lw,lh);
+  X.restore();
+  // cloth
+  X.save(); X.translate(gx, ly+lh*0.34); X.rotate(-0.18);
+  X.beginPath();
+  X.moveTo(-150,-70);X.quadraticCurveTo(60,-120,170,-40);
+  X.quadraticCurveTo(210,40,60,84);X.quadraticCurveTo(-110,110,-160,20);X.closePath();
+  X.fillStyle='rgba(10,10,9,0.75)'; X.fill(); stroke(ink(.55),3);
+  X.restore();
+}
+function s14(t){ // 21.5-23 lid closes
+  const p=P(t,21.5,23), e=eIO(p);
+  const bx=W/2-380, by=H*0.62, bw=760;
+  poly([[bx,by],[bx+bw,by],[bx+bw+18,by+42],[bx-18,by+42]]);
+  X.fillStyle='rgba(237,231,222,0.045)'; X.fill(); stroke(ink(.78),3.4);
+  const ang=lp(-0.95,-0.035,e);
+  X.save(); X.translate(bx+22,by+4); X.rotate(ang);
+  rr(0,-30,bw-40,30,8); X.fillStyle='rgba(10,10,9,.9)'; X.fill(); stroke(ink(.8),3.4);
+  X.restore();
+  X.beginPath(); X.arc(bx+22,by+4,16,0,7); stroke(ink(.45),2.6);
+  if(p>0.86){ const a=P(t,22.8,23.0);
+    line(bx+40,by-6,bx+bw-30,by-6,hot(.5*a),3);
+    glowDot(bx+bw-40,by-4,180,hot,.22*a); }
+}
+function s15(t){ // 23-25 hero turntable
+  const p=P(t,23,25);
+  const yaw=lp(0.34,1.02,eIO(p));
+  X.beginPath(); X.ellipse(W/2,H*0.688,360,62,0,0,7); stroke(ink(.07),2.2);
+  X.save(); X.globalAlpha=.085; X.translate(0,H*1.246); X.scale(1,-0.40);
+  slab(W/2, H*0.52, 720, 470, 34, yaw, 1); X.restore();
+  const f=slab(W/2, H*0.52, 720, 470, 34, yaw, 1);
+  line(f.tl[0],f.tl[1],f.tr[0],f.tr[1], ink(.95), 4.5);
+  line(f.tr[0],f.tr[1],f.br[0],f.br[1], ink(.55), 3);
+  glowDot(W/2,H*0.52,640,ink,.05);
+}
+function s16(t){ // 25-27 wake
+  const p=P(t,25,27);
+  const sc=lp(1.0,1.10,eIO(p));
+  X.save(); X.translate(W/2,H*0.5); X.scale(sc,sc); X.translate(-W/2,-H*0.5);
+  const sx=W/2-360, sy=H*0.24, sw=720, sh=560;
+  rr(sx,sy,sw,sh,10);
+  const on=P(t,25.7,26.6);
+  X.fillStyle=`rgba(237,231,222,${0.02+on*0.10})`; X.fill(); stroke(ink(.62),3.4);
+  if(on>0){ glowDot(W/2,sy+sh/2, 520, ink, on*.16);
+    mono('BOOT', W/2, sy+sh/2+14, 40, ink(.30*on),'center',12); }
+  poly([[sx-30,sy+sh+22],[sx+sw+30,sy+sh+22],[sx+sw+58,sy+sh+74],[sx-58,sy+sh+74]]);
+  X.fillStyle='rgba(237,231,222,0.04)'; X.fill(); stroke(ink(.7),3.4);
+  const bp=P(t,25.15,25.75);
+  const bxx=sx+sw-90, byy=sy+sh+48;
+  glowDot(bxx,byy,150,hot,bp*.45);
+  X.beginPath(); X.arc(bxx,byy,17,0,7); stroke(hot(.35+bp*.65),3.4);
+  X.restore();
+}
+function s17(t){ // 27-31 life, warm, no people
+  const p=P(t,27,31);
+  const sc=lp(1.0,1.07,eIO(p));
+  X.save(); X.translate(W/2,H*0.55); X.scale(sc,sc); X.translate(-W/2,-H*0.55);
+  // window light
+  X.fillStyle='rgba(232,180,120,0.07)';
+  poly([[0,H*0.06],[W*0.40,H*0.06],[W*0.30,H*0.78],[0,H*0.78]]); X.fill();
+  rr(30,H*0.09,250,620,4); stroke(warm(.13),2.4);
+  line(155,H*0.09,155,H*0.09+620,warm(.10),2);
+  // desk
+  line(0,H*0.70,W,H*0.70,warm(.42),3.4);
+  // laptop open
+  const bx=W/2-250, by=H*0.70;
+  poly([[bx,by],[bx+500,by],[bx+520,by-34],[bx-20,by-34]]);
+  X.fillStyle='rgba(232,180,120,0.05)'; X.fill(); stroke(warm(.62),3.2);
+  poly([[bx-4,by-34],[bx+504,by-34],[bx+474,by-330],[bx+26,by-330]]);
+  X.fillStyle='rgba(232,180,120,0.07)'; X.fill(); stroke(warm(.58),3.2);
+  // hebrew hint on the deck
+  for(let c=0;c<8;c++) hebrew(ROWS[0][c], bx+72+c*52, by-11, 21, warm(.36));
+  // coffee + steam
+  const cx2=W*0.80, cy2=H*0.70;
+  poly([[cx2-52,cy2-96],[cx2+52,cy2-96],[cx2+40,cy2],[cx2-40,cy2]]);
+  X.fillStyle='rgba(232,180,120,0.05)'; X.fill(); stroke(warm(.55),3);
+  X.beginPath(); X.arc(cx2+62,cy2-58,26,-1.1,1.1); stroke(warm(.40),3);
+  for(let i=0;i<3;i++){
+    const ph=((t-27)*0.42+i*0.33)%1;
+    X.beginPath(); X.moveTo(cx2-22+i*22, cy2-100-ph*40);
+    X.quadraticCurveTo(cx2-22+i*22+Math.sin(ph*7+i)*26, cy2-170-ph*60, cx2-22+i*22+Math.sin(ph*4+i)*16, cy2-240-ph*70);
+    stroke(warm(.22*(1-ph)),3);
+  }
+  X.restore();
+}
+function s18(t){ // 31-35 end card
+  const a1=env(t,31.15,35,.55,0), a2=env(t,31.5,35,.55,0), a3=env(t,32.5,35,.6,0), a4=env(t,33.0,35,.6,0);
+  // logo slot
+  X.save(); X.globalAlpha=a1*0.9;
+  rr(W/2-118,H*0.30,236,236,26); stroke(ink(.22),2.6);
+  hebrew('הלוגו שלכם', W/2, H*0.30+128, 27, ink(.30), 500);
+  X.restore();
+  hebrew('לא חדש.',   W/2, H*0.50, 108, ink(.96),800,'center',a2);
+  hebrew('חדש לגמרי.',W/2, H*0.50+128, 108, HOT, 800,'center',a2);
+  // laser rule wipes
+  const rw=eO(P(t,32.4,33.2))*420;
+  if(rw>1){ const g=X.createLinearGradient(W/2+210-rw,0,W/2+210,0);
+    g.addColorStop(0,'rgba(242,128,61,0)');g.addColorStop(1,hot(.95*a3));
+    X.fillStyle=g; X.fillRect(W/2+210-rw, H*0.50+190, rw, 5); }
+  hebrew('3 שנות אחריות · 45 יום ניסיון', W/2, H*0.50+270, 46, ink(.72),700,'center',a3);
+  mono('YOURSITE.CO.IL', W/2, H*0.50+352, 28, ink(.34),'center',9,a4);
+}
+
+/* ---------- on-screen copy ---------- */
+function copy(t){
+  const items=[
+    ['לכל מחשב יש עבר', 4.4, 7.6, SQ ? 0.16 : 0.30],
+    ['בודקים כל רכיב', 8.4, 11.6, SQ ? 0.16 : 0.30],
+    ['עברית. בלייזר.', 15.4, 19.4, SQ ? 0.90 : 0.845],
+    ['3 שנות אחריות · 45 יום ניסיון', 26.4, 30.2, SQ ? 0.16 : 0.30],
+  ];
+  for(const [txt,s,e,yf] of items){
+    const a=env(t,s,e,.45,.45); if(a<=0.005) continue;
+    const y=H*yf + lp(16,0,eO(P(t,s,s+.7)));
+    hebrew(txt, W/2, y, txt.length>18?52:70, ink(.95),800,'center',a);
+  }
+}
+
+/* ---------- global grade ---------- */
+function grade(t){
+  // warm shift through the engraving beat and the life shot
+  const warmA = Math.max(env(t,13.8,20.4,1.2,1.2)*0.055, env(t,26.8,31.1,1.0,0.4)*0.075);
+  if(warmA>0){ X.fillStyle=`rgba(242,140,70,${warmA})`; X.fillRect(0,0,W,H); }
+  // vignette
+  const g=X.createRadialGradient(W/2,H*0.5,H*0.16,W/2,H*0.5,H*0.72);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.62)');
+  X.fillStyle=g; X.fillRect(0,0,W,H);
+  // grain
+  seed(Math.floor(t*24)+11);
+  X.globalAlpha=.045;
+  for(let i=0;i<2600;i++){
+    X.fillStyle = srnd()>.5? '#ffffff':'#000000';
+    X.fillRect(srnd()*W, srnd()*H, 2, 2);
+  }
+  X.globalAlpha=1;
+  // opening + closing fade
+  const fin=P(t,0,0.5), fout=1-P(t,34.5,35.0);
+  const f=1-Math.min(fin,fout);
+  if(f>0){ X.fillStyle=`rgba(0,0,0,${f})`; X.fillRect(0,0,W,H); }
+}
+
+const CUTS=[[0,2,s01],[2,3.5,s02],[3.5,5,s03],[5,6.5,s04],[6.5,8,s05],[8,9.2,s06],
+            [9.2,10.4,s07],[10.4,11.6,s08],[11.6,13,s09],[13,14,s10],[14,17,s11],
+            [17,20,s12],[20,21.5,s13],[21.5,23,s14],[23,25,s15],[25,27,s16],
+            [27,31,s17],[31,35,s18]];
+
+function render(t){
+  X.setTransform(1,0,0,1,0,0);
+  X.fillStyle=BG; X.fillRect(0,0,W,H);
+  for(const [s,e,fn] of CUTS){ if(t>=s && t<e){ X.save(); fn(t); X.restore(); break; } }
+  if(t>=35){ X.save(); s18(34.99); X.restore(); }
+  X.save(); copy(t); X.restore();
+  grade(t);
+}
+window.render=render;
+render(0);
+</script>
