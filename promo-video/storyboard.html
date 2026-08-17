@@ -266,13 +266,12 @@
     <h1>18 פריימים</h1>
     <div class="laser-rule"></div>
     <p class="lede">
-      קאדראז׳ ותנועת מצלמה לכל שוט בסרטון ״לא חדש. חדש לגמרי.״ הפריימים מצוירים ביחס 9:16
-      ובאותה קומפוזיציה שתצולם — הם לוח העבודה של יום הצילום, לא איור.
+      קאדראז׳ ותנועת מצלמה לכל שוט בסרטון ״לא חדש. חדש לגמרי.״ הסרטון נוצר כולו ב־AI,
+      ולכן כל פריים כאן הוא הקומפוזיציה שצריכה לצאת מהפרומפט — לוח בקרה לג׳נרציה, לא איור.
     </p>
     <div class="legend">
-      <span class="chip chip--real">REAL</span>
       <span class="chip chip--ai">AI</span>
-      <span class="chip chip--hyb">HYBRID</span>
+      <span class="chip chip--hyb">AI + COMP</span>
       <span class="chip chip--gfx">GFX</span>
     </div>
   </header>
@@ -311,21 +310,20 @@
     <figure>
       <div class="frame">
         <svg viewBox="0 0 108 192" role="img" aria-label="ידיים בכפפות מוציאות את המחשב, מאקרו">
-          <rect class="ln" x="10" y="74" width="88" height="26" rx="3"/>
-          <path class="hair" d="M10 88 H98"/>
-          <path class="ln" d="M14 132 q6 -30 22 -34 q10 -3 12 6"/>
-          <path class="dim" d="M26 134 q4 -26 16 -30"/>
-          <path class="ln" d="M94 132 q-6 -30 -22 -34 q-10 -3 -12 6"/>
-          <path class="dim" d="M82 134 q-4 -26 -16 -30"/>
-          <path class="hair" d="M0 118 H108"/>
+          <path class="dim" d="M18 62 q6 -10 16 -6 l52 20 q10 4 6 14 l-10 26 q-4 10 -14 6 l-52 -20 q-10 -4 -6 -14 Z"/>
+          <path class="hair" d="M22 58 q10 -8 18 -2 M84 76 q10 6 8 16"/>
+          <rect class="ln" x="30" y="112" width="66" height="20" rx="3"/>
+          <path class="hair" d="M30 122 H96"/>
+          <path class="hot" d="M22 122 H26 M96 148 H40 M48 142 L40 148 L48 154" opacity=".85"/>
+          <path class="hair" d="M0 140 H108"/>
         </svg>
         <span class="slug">02</span><span class="move">STATIC</span>
       </div>
       <figcaption>
         <div class="cap-top"><span>00:02.0</span><span class="dur">1.5s</span></div>
-        <h3>הוצאה מהשקית</h3>
-        <p>מאקרו, פוקוס רדוד על קצה האלומיניום. ידיים אמיתיות תמיד.</p>
-        <span class="chip chip--real">REAL</span>
+        <h3>השקית נפתחת</h3>
+        <p>המחשב מחליק החוצה מעצמו. אין ידיים בפריים.</p>
+        <span class="chip chip--ai">AI</span>
       </figcaption>
     </figure>
 
@@ -500,19 +498,19 @@
           <path class="ln" d="M6 128 H102"/>
           <rect class="dim" x="10" y="112" width="16" height="16" rx="2"/>
           <rect class="dim" x="30" y="112" width="16" height="16" rx="2"/>
-          <rect class="ln"  x="50" y="118" width="16" height="10" rx="2"/>
+          <rect class="ln"  x="50" y="112" width="16" height="16" rx="2"/>
           <rect class="dim" x="70" y="112" width="16" height="16" rx="2"/>
-          <path class="ln" d="M52 66 q10 -14 22 -6 q8 6 2 18 l-8 34"/>
-          <path class="dim" d="M64 78 q6 -6 10 -2"/>
-          <path class="hot" d="M58 100 V112 M54 106 L58 112 L62 106"/>
+          <polygon class="fill-glow" points="42,86 74,86 66,132 34,132"/>
+          <path class="hot" d="M50 100 H70 M64 94 L70 100 L64 106" opacity=".9"/>
+          <path class="hair" d="M0 148 H108"/>
         </svg>
-        <span class="slug">10</span><span class="move">STATIC</span>
+        <span class="slug">10</span><span class="move">SWEEP R</span>
       </div>
       <figcaption>
         <div class="cap-top"><span>00:13.0</span><span class="dur">1.0s</span></div>
-        <h3>כל מקש</h3>
-        <p>קליק. קליק. קליק. השוט הקצר ביותר בסרטון.</p>
-        <span class="chip chip--real">REAL</span>
+        <h3>גל על המקשים</h3>
+        <p>אור עובר שורה אחרי שורה. המקלדת מגיבה, לא אצבע.</p>
+        <span class="chip chip--hyb">AI + COMP</span>
       </figcaption>
     </figure>
 
@@ -545,8 +543,8 @@
       <figcaption>
         <div class="cap-top"><span>00:14.0</span><span class="dur">3.0s</span></div>
         <h3>החריטה</h3>
-        <p>השוט החשוב בסרטון. חובה אמיתי — AI לא יודע לכתוב עברית.</p>
-        <span class="chip chip--real">REAL · חובה</span>
+        <p>מייצרים מקש ריק. האות היא שכבת טקסט שנחשפת ב־wipe מסונכרן לקרן.</p>
+        <span class="chip chip--hyb">AI + COMP · הליבה</span>
       </figcaption>
     </figure>
 
@@ -586,8 +584,8 @@
       <figcaption>
         <div class="cap-top"><span>00:17.0</span><span class="dur">3.0s</span></div>
         <h3>המקלדת נחשפת</h3>
-        <p>נסיגה איטית. כל האותיות תופסות אור. חובה אמיתי.</p>
-        <span class="chip chip--real">REAL · חובה</span>
+        <p>העברית מולבשת על הסטיל לפני האנימציה, ואז I2V מהתמונה המתוקנת.</p>
+        <span class="chip chip--hyb">AI + COMP · הליבה</span>
       </figcaption>
     </figure>
 
@@ -676,16 +674,17 @@
           <path class="ln" d="M12 112 H96 L100 120 H8 Z"/>
           <circle class="hot" cx="76" cy="106" r="5"/>
           <circle class="fill-glow" cx="76" cy="106" r="11"/>
-          <path class="ln" d="M60 168 q6 -34 18 -42 q8 -5 10 4"/>
-          <path class="dim" d="M70 170 q4 -30 14 -36"/>
+          <circle class="hot" cx="76" cy="106" r="16" opacity=".28"/>
+          <circle class="hot" cx="76" cy="106" r="22" opacity=".14"/>
+          <path class="hair" d="M0 150 H108"/>
         </svg>
         <span class="slug">16</span><span class="move">PUSH IN</span>
       </div>
       <figcaption>
         <div class="cap-top"><span>00:25.0</span><span class="dur">2.0s</span></div>
         <h3>התעוררות</h3>
-        <p>המסך מתעורר. מסך האתחול נדלק.</p>
-        <span class="chip chip--real">REAL</span>
+        <p>הכפתור נדלק מעצמו, המסך אחריו. הממשק מולבש בעריכה.</p>
+        <span class="chip chip--hyb">AI + COMP</span>
       </figcaption>
     </figure>
 
@@ -693,22 +692,25 @@
     <figure>
       <div class="frame">
         <svg viewBox="0 0 108 192" role="img" aria-label="שולחן אמיתי, אדם מקליד, אור חלון חם">
-          <polygon class="fill-glow" points="0,20 34,20 20,120 0,120"/>
-          <path class="ln" d="M0 128 H108"/>
-          <path class="ln" d="M40 128 L46 108 H74 L80 128"/>
-          <path class="dim" d="M46 108 L74 108"/>
-          <path class="ln" d="M48 108 L52 76 H70 L74 108"/>
-          <circle class="ln" cx="61" cy="58" r="11"/>
-          <path class="ln" d="M50 76 q-8 12 -6 24 M72 76 q8 12 6 24"/>
-          <path class="hair" d="M0 140 H108 M0 152 H108" opacity=".12"/>
+          <polygon class="fill-glow" points="0,14 30,14 22,126 0,126"/>
+          <rect class="hair" x="2" y="16" width="26" height="96" rx="1"/>
+          <path class="ln" d="M0 130 H108"/>
+          <path class="ln" d="M34 130 L40 104 H72 L78 130"/>
+          <path class="dim" d="M40 104 H72"/>
+          <path class="ln" d="M42 104 L46 74 H68 L72 104"/>
+          <path class="hair" d="M48 96 H66 M48 90 H62"/>
+          <path class="ln" d="M84 118 h12 v10 a6 6 0 0 1 -6 6 h0 a6 6 0 0 1 -6 -6 Z"/>
+          <path class="dim" d="M96 121 q5 1 5 5 q0 4 -5 5"/>
+          <path class="dim" d="M88 112 q4 -8 0 -14 M93 112 q4 -8 0 -14"/>
+          <path class="hair" d="M0 146 H108" opacity=".12"/>
         </svg>
-        <span class="slug">17</span><span class="move">STATIC</span>
+        <span class="slug">17</span><span class="move">PUSH IN</span>
       </div>
       <figcaption>
         <div class="cap-top"><span>00:27.0</span><span class="dur">4.0s</span></div>
         <h3>חיים</h3>
-        <p>השוט היחיד עם בן אדם. אור חלון חם, ניגוד מלא למעבדה.</p>
-        <span class="chip chip--real">REAL</span>
+        <p>שולחן ריק, אור בוקר, אדי קפה. אף אחד בפריים — הצופה ממלא את החסר.</p>
+        <span class="chip chip--ai">AI</span>
       </figcaption>
     </figure>
 
@@ -741,8 +743,10 @@
     <h3>איך קוראים את הלוח ביום הצילום</h3>
     <ul class="plain">
       <li><strong>התווית בפינה השמאלית־תחתונה</strong> היא תנועת המצלמה, ויש רק אחת לכל שוט. <code>STATIC</code> אומר שהמצלמה לא זזה בכלל — במאקרו זו ברירת המחדל הנכונה.</li>
-      <li><strong>שני הפריימים בגבול כתום</strong> (11 ו־12) הם הליבה. אם רק הם ייצאו מצוין והשאר סבירים — הסרטון עובד. הפוך, לא.</li>
+      <li><strong>שני הפריימים בגבול כתום</strong> (11 ו־12) הם הליבה, והיחידים שדורשים עבודת שכבות אמיתית. אם רק הם ייצאו מצוין והשאר סבירים — הסרטון עובד. הפוך, לא.</li>
+      <li><strong>אין ידיים באף פריים.</strong> ארבעה שוטים עוצבו מחדש בלי אצבעות, כי אצבעות במאקרו הן הדבר השני שמודלי וידאו הכי מקלקלים.</li>
       <li><strong>הקומפוזיציה נבנתה ל־9:16.</strong> המוצר תמיד חוצה את מרכז הפריים לרוחב, כי בפורמט אנכי יש מעט רוחב ואסור לבזבז אותו על אוויר בצדדים.</li>
+      <li><strong>המקשים ריקים בכוונה</strong> בכל פריים שבו נראית מקלדת. את האותיות מוסיפים אחר כך — אף פעם לא נותנים למודל לכתוב עברית.</li>
       <li><strong>הקצה התחתון של כל פריים</strong> נשאר ריק בכוונה — שם יושבים כפתורי הממשק של אינסטגרם וטיקטוק, ושום דבר חשוב לא נכנס לשם.</li>
     </ul>
   </div>
