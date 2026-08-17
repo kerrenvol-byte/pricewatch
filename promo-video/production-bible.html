@@ -1,0 +1,1073 @@
+<title>לא חדש. חדש לגמרי.</title>
+<style>
+  :root {
+    --ground:      #F6F3EF;
+    --surface:     #FFFFFF;
+    --surface-2:   #EFEAE3;
+    --line:        #E0D9CF;
+    --line-strong: #CFC5B8;
+    --ink:         #1A1714;
+    --ink-2:       #453E37;
+    --muted:       #6E655B;
+    --laser:       #D2571A;
+    --laser-soft:  #F6E4D6;
+    --glow:        rgba(210, 87, 26, 0.00);
+
+    --src-real:    #16776A;
+    --src-real-bg: #DEEFEB;
+    --src-ai:      #5A50A8;
+    --src-ai-bg:   #E6E3F5;
+    --src-hyb:     #8A6011;
+    --src-hyb-bg:  #F4EAD4;
+    --src-gfx:     #64605A;
+    --src-gfx-bg:  #E8E4DE;
+
+    --font-he: "Heebo", "Assistant", "Rubik", "Noto Sans Hebrew", "Arial Hebrew", "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #141311;
+      --surface:     #1C1A17;
+      --surface-2:   #232019;
+      --line:        #2F2B26;
+      --line-strong: #443E36;
+      --ink:         #EFEAE2;
+      --ink-2:       #C7BFB4;
+      --muted:       #9A9188;
+      --laser:       #F2803D;
+      --laser-soft:  #33200F;
+      --glow:        rgba(242, 128, 61, 0.20);
+
+      --src-real:    #5FC7AC;
+      --src-real-bg: #12312B;
+      --src-ai:      #A79EE8;
+      --src-ai-bg:   #241F3D;
+      --src-hyb:     #E0A93B;
+      --src-hyb-bg:  #33280F;
+      --src-gfx:     #A29B92;
+      --src-gfx-bg:  #262320;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #141311;
+    --surface:     #1C1A17;
+    --surface-2:   #232019;
+    --line:        #2F2B26;
+    --line-strong: #443E36;
+    --ink:         #EFEAE2;
+    --ink-2:       #C7BFB4;
+    --muted:       #9A9188;
+    --laser:       #F2803D;
+    --laser-soft:  #33200F;
+    --glow:        rgba(242, 128, 61, 0.20);
+
+    --src-real:    #5FC7AC;
+    --src-real-bg: #12312B;
+    --src-ai:      #A79EE8;
+    --src-ai-bg:   #241F3D;
+    --src-hyb:     #E0A93B;
+    --src-hyb-bg:  #33280F;
+    --src-gfx:     #A29B92;
+    --src-gfx-bg:  #262320;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-he);
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    direction: rtl;
+    text-align: right;
+    max-width: 62rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 5rem) clamp(1.1rem, 4vw, 3rem) 7rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 7vw, 5.5rem);
+  }
+
+  .prose { max-width: 60ch; }
+  p { margin: 0; }
+  .stack { display: flex; flex-direction: column; gap: 1rem; }
+  .stack-sm { display: flex; flex-direction: column; gap: .5rem; }
+
+  /* ---------- slate / hero ---------- */
+  .slate { display: flex; flex-direction: column; gap: 1.6rem; }
+
+  .slate-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .slate-meta div {
+    background: var(--surface);
+    padding: .7rem .9rem;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+  }
+  .slate-meta dt {
+    font-family: var(--font-mono);
+    font-size: .62rem;
+    letter-spacing: .16em;
+    color: var(--muted);
+  }
+  .slate-meta dd {
+    font-size: .92rem;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .display {
+    font-size: clamp(2.5rem, 8.5vw, 4.4rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    text-shadow: 0 0 34px var(--glow);
+    margin: 0;
+  }
+  .laser-rule {
+    height: 2px;
+    width: min(100%, 26rem);
+    background: linear-gradient(to left, var(--laser), transparent);
+    box-shadow: 0 0 12px var(--glow);
+  }
+  .lede {
+    font-size: clamp(1.05rem, 2.4vw, 1.22rem);
+    color: var(--ink-2);
+    max-width: 52ch;
+    line-height: 1.7;
+  }
+
+  /* ---------- sections ---------- */
+  section { display: flex; flex-direction: column; gap: 1.6rem; }
+
+  .sec-head {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    border-top: 1px solid var(--line-strong);
+    padding-top: 1rem;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: .66rem;
+    letter-spacing: .2em;
+    color: var(--laser);
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: clamp(1.45rem, 3.6vw, 2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* ---------- callout ---------- */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-inline-start: 3px solid var(--laser);
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .callout h3 { color: var(--laser); font-size: .95rem; }
+  .callout p, .callout li { color: var(--ink-2); font-size: .95rem; }
+
+  /* ---------- steps ---------- */
+  .steps { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .step {
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    align-items: start;
+  }
+  .step-n {
+    font-family: var(--font-mono);
+    font-size: 1.35rem;
+    font-weight: 500;
+    color: var(--laser);
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+  }
+  .step p { color: var(--ink-2); font-size: .95rem; margin-top: .2rem; }
+  .step-time {
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    color: var(--muted);
+    display: block;
+    margin-top: .35rem;
+  }
+
+  /* ---------- shot cards ---------- */
+  .shots { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .shot {
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 5.4rem 1fr;
+    gap: 1.1rem;
+    padding: 1.1rem 1.1rem;
+  }
+  .shot--hero { background: var(--surface-2); }
+
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: .12rem;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    border-inline-end: 1px solid var(--line);
+    padding-inline-end: .9rem;
+    text-align: start;
+  }
+  .rail .num { font-size: 1.15rem; font-weight: 600; color: var(--ink); line-height: 1.2; }
+  .rail .tc  { font-size: .74rem; color: var(--muted); }
+  .rail .dur { font-size: .74rem; color: var(--laser); }
+
+  .shot-body { display: flex; flex-direction: column; gap: .6rem; min-width: 0; }
+  .shot-head { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; }
+  .shot-body p { font-size: .96rem; color: var(--ink-2); }
+
+  .chip {
+    font-family: var(--font-mono);
+    font-size: .62rem;
+    letter-spacing: .11em;
+    padding: .16rem .5rem;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .chip--real { color: var(--src-real); background: var(--src-real-bg); }
+  .chip--ai   { color: var(--src-ai);   background: var(--src-ai-bg); }
+  .chip--hyb  { color: var(--src-hyb);  background: var(--src-hyb-bg); }
+  .chip--gfx  { color: var(--src-gfx);  background: var(--src-gfx-bg); }
+  .chip--must { color: var(--laser); background: var(--laser-soft); font-weight: 600; }
+
+  .note {
+    font-size: .86rem !important;
+    color: var(--muted) !important;
+    border-inline-start: 2px solid var(--line-strong);
+    padding-inline-start: .7rem;
+  }
+
+  /* ---------- beat marker ---------- */
+  .beat {
+    background: var(--surface);
+    padding: .75rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    letter-spacing: .12em;
+    color: var(--laser);
+  }
+  .beat::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to left, var(--laser), transparent); }
+
+  /* ---------- prompts ---------- */
+  pre {
+    direction: ltr;
+    text-align: left;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    padding: .8rem .9rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    line-height: 1.6;
+    color: var(--ink-2);
+    white-space: pre;
+    tab-size: 2;
+  }
+  pre .neg { color: var(--laser); }
+
+  /* ---------- legend ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: .45rem; }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; min-width: 30rem; background: var(--surface); }
+  th, td {
+    text-align: right;
+    padding: .6rem .85rem;
+    border-bottom: 1px solid var(--line);
+    font-size: .92rem;
+    vertical-align: top;
+  }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: .64rem;
+    letter-spacing: .14em;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.tc, th.tc, td.num, .tnum {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    font-size: .84rem;
+  }
+  td.tc { color: var(--laser); }
+  tr.total td { font-weight: 700; background: var(--surface-2); }
+
+  /* ---------- lists ---------- */
+  ul.check, ul.plain { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  ul.check li, ul.plain li {
+    position: relative;
+    padding-inline-start: 1.5rem;
+    font-size: .95rem;
+    color: var(--ink-2);
+  }
+  ul.check li::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: .55em;
+    width: .72rem; height: .72rem;
+    border: 1.5px solid var(--line-strong);
+  }
+  ul.plain li::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: .18rem;
+    top: .78em;
+    width: .34rem; height: .34rem;
+    background: var(--laser);
+  }
+  ul.check li strong, ul.plain li strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- two-col ---------- */
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .cols > div { background: var(--surface); padding: 1.1rem; display: flex; flex-direction: column; gap: .6rem; }
+  .cols h3 { font-size: .95rem; }
+  .cols p, .cols li { font-size: .92rem; color: var(--ink-2); }
+
+  a { color: var(--laser); }
+  :focus-visible { outline: 2px solid var(--laser); outline-offset: 2px; }
+
+  @media (max-width: 34rem) {
+    body { font-size: 16px; }
+    .shot { grid-template-columns: 4.3rem 1fr; gap: .8rem; padding: .95rem .85rem; }
+    .rail { padding-inline-end: .65rem; }
+    .rail .num { font-size: 1rem; }
+    .step { grid-template-columns: 2.4rem 1fr; gap: .7rem; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- ============ SLATE ============ -->
+  <header class="slate">
+    <dl class="slate-meta">
+      <div><dt>PROJECT</dt><dd>מחשבים מחודשים</dd></div>
+      <div><dt>FORMAT</dt><dd>9:16 · 1080×1920</dd></div>
+      <div><dt>RUNTIME</dt><dd>35.0 שנ׳</dd></div>
+      <div><dt>SHOTS</dt><dd>18</dd></div>
+      <div><dt>VERSION</dt><dd>v1.0</dd></div>
+    </dl>
+
+    <div class="stack">
+      <span class="eyebrow">Campaign line</span>
+      <h1 class="display">לא חדש.<br>חדש לגמרי.</h1>
+      <div class="laser-rule"></div>
+    </div>
+
+    <p class="lede">
+      תיק הפקה מלא לסרטון תדמית בסגנון פרסומת מוצר: תסריט מתוזמן שוט־בשוט, פרומפטים מוכנים
+      להדבקה לכל שוט שנוצר ב־AI, רשימת צילום למה שחייב להיות אמיתי, פסקול, גרייד, נגזרות ובקרת איכות.
+    </p>
+
+    <div class="legend">
+      <span class="chip chip--real">REAL · צילום</span>
+      <span class="chip chip--ai">AI · ג׳נרציה</span>
+      <span class="chip chip--hyb">HYBRID · שילוב</span>
+      <span class="chip chip--gfx">GFX · גרפיקה</span>
+    </div>
+  </header>
+
+  <!-- ============ IDEA ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Treatment</span>
+      <h2>הרעיון</h2>
+    </div>
+
+    <div class="prose stack">
+      <p>
+        פרסומת מוצר טובה מספרת דבר אחד. הדבר האחד כאן הוא לא המחיר ולא המפרט — אלא
+        <strong>הרגע שבו מכונה זרה הופכת לישראלית</strong>. החריטה בלייזר היא הביט הרגשי, וגם היחיד
+        שאין לאף מתחרה בפוטג׳ סטוק.
+      </p>
+      <p>
+        לכן כל הסרטון בנוי כדי לשרת שש שניות: מצטבר לקראתן, נעצר לגמרי בתוכן, ומשם נוחת.
+        המבנה הוא <strong>הגעה ← פירוק ← בדיקות ← חריטה ← לידה מחדש ← חיים</strong>.
+      </p>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>קווי מסר חלופיים</h3>
+        <ul class="plain">
+          <li><strong>לא חדש. חדש לגמרי.</strong> — הפרדוקס. מומלץ.</li>
+          <li><strong>נולד מחדש. מדבר עברית.</strong> — רגשי יותר, פחות חד.</li>
+          <li><strong>חיים שניים. תקן ראשון.</strong> — טוב אם המסר הוא אמינות.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>שפה חזותית</h3>
+        <ul class="plain">
+          <li>רקע שחור מוחלט לכל שוטי המוצר. בלי סטודיו לבן.</li>
+          <li>מאקרו ופוקוס רדוד — המוצר תמיד גדול מהמסך.</li>
+          <li>תנועת מצלמה אחת בלבד לכל שוט, איטית.</li>
+          <li>בלי אנשים עד שנייה 27. המכונה היא הגיבורה.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h3>הנחות עבודה — קל להחליף</h3>
+      <p>
+        התיק כתוב עבור <strong>לפטופים עסקיים מחודשים</strong> (Latitude / ThinkPad / EliteBook) ועבור
+        <strong>9:16 כמאסטר</strong>. אם מדובר בנייחים או ב־All‑in‑One, שוטים 05–07 (פירוק) נעשים
+        קלים יותר ולא קשים; אם המאסטר הוא 16:9, ראו את הערות הקאדראז׳ בסעיף הנגזרות.
+        שם המותג, מספר הבדיקות ותנאי האחריות מסומנים בתיק כמצייני מקום.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ PIPELINE ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Pipeline</span>
+      <h2>סדר העבודה</h2>
+    </div>
+
+    <p class="prose">
+      הכלל שמנחה את כל התהליך: מודלי וידאו שומרים נאמנות מצוינת ל<strong>תמונה סטטית</strong> ונאמנות גרועה
+      ל<strong>וידאו קיים</strong>. לכן הסרטונים שצולמו בטלפון משמשים כרפרנס ומאגר פריימים — לא כפוטג׳ סופי.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <span class="step-n">01</span>
+        <div>
+          <h3>חילוץ מהחומר הקיים</h3>
+          <p><code>ffmpeg -i clip.mp4 -vf "select=gt(scene\,0.2)" -vsync vfr f%03d.png</code> — לחלץ פריימים, לבחור את החדים, להעלות רזולוציה ב־Topaz Photo AI או Magnific. תוצאה: 10–20 תמונות מוצר אמיתיות, בחינם.</p>
+          <span class="step-time">כ־45 דקות</span>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-n">02</span>
+        <div>
+          <h3>צילום סטילס חדש</h3>
+          <p>הצעד עם ההחזר הגבוה ביותר בתהליך כולו. 12 תמונות נקיות על רקע שחור מזינות שבעה שוטים בסרטון. פירוט הסט בסעיף הצילום.</p>
+          <span class="step-time">כ־2 שעות</span>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-n">03</span>
+        <div>
+          <h3>צילום החומר שחייב להיות אמיתי</h3>
+          <p>חמישה שוטי וידאו ש־AI לא יכול לייצר נכון — בראשם החריטה בעברית. 4K, 60fps, ו־120fps לשוט הלייזר.</p>
+          <span class="step-time">כ־2 שעות</span>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-n">04</span>
+        <div>
+          <h3>ג׳נרציה</h3>
+          <p>שבעה שוטים ב־Image‑to‑Video מהסטילס. Kling 2.5, Veo 3, Runway Gen‑4 או Sora 2 — כולם מספיקים. לייצר 3 וריאציות לכל שוט.</p>
+          <span class="step-time">כ־4 שעות</span>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-n">05</span>
+        <div>
+          <h3>עריכה, קול, גרייד</h3>
+          <p>DaVinci Resolve (חינם) או Premiere. מונטאז׳ ← קריינות ← מוזיקה ← סאונד דיזיין ← תיקון צבע ← טיפוגרפיה.</p>
+          <span class="step-time">כ־5 שעות</span>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-n">06</span>
+        <div>
+          <h3>נגזרות ובקרת איכות</h3>
+          <p>שש גרסאות לפלטפורמות השונות, ואז מעבר על צ׳קליסט ה־QC שוט־שוט.</p>
+          <span class="step-time">כ־3 שעות</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SHOT LIST ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Shot list · 35.0s</span>
+      <h2>התסריט, שוט אחרי שוט</h2>
+    </div>
+
+    <p class="prose">
+      הפרומפטים כתובים באנגלית — כל המודלים מגיבים אליהם טוב יותר. שורת ה־<code>--no</code> היא
+      פרומפט שלילי; אם הכלי שלכם לא תומך בתחביר הזה, יש לו בדרך כלל שדה נפרד בשם Negative prompt.
+    </p>
+
+    <div class="shots">
+
+      <article class="shot">
+        <div class="rail"><span class="num">01</span><span class="tc">00:00.0</span><span class="dur">2.0s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--hyb">HYBRID</span><h3>הגעה</h3></div>
+          <p>שחור מוחלט. קרן אור אחת סורקת שקית אנטי־סטטית אטומה; מבעד לניילון מסתמן מתאר של לפטופ סגור.</p>
+<pre>slow lateral light sweep across a sealed anti-static bag containing a
+closed laptop, matte black seamless background, single hard key light
+raking from frame left, deep shadows, fine plastic texture catching the
+light, static camera, shallow depth of field, cinematic, 24fps
+<span class="neg">--no text, logos, hands, people, watermark</span></pre>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">02</span><span class="tc">00:02.0</span><span class="dur">1.5s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><h3>הוצאה מהשקית</h3></div>
+          <p>ידיים בכפפות ניטריל שולפות את המחשב. מאקרו, פוקוס רדוד על קצה האלומיניום.</p>
+          <p class="note">ידיים תמיד אמיתיות. מודלי וידאו מעוותים אצבעות במאקרו כמעט תמיד, וזה הדבר הראשון שהעין תופסת כמזויף.</p>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">03</span><span class="tc">00:03.5</span><span class="dur">1.5s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--hyb">HYBRID</span><h3>נחיתה על השולחן</h3></div>
+          <p>טופ־דאון: המחשב מונח על שולחן עבודה מט. חלקיקי אבק עולים ונדלקים בקרן האור.</p>
+<pre>extreme slow motion dust particles drifting through a single hard light
+beam, pure black background, volumetric shaft of light, fine specks
+catching the light, no objects in frame, macro, 120fps slow motion
+<span class="neg">--no text, logos, people, haze, smoke</span></pre>
+          <p class="note">לייצר את האבק כאלמנט נפרד על שחור, ולהניח כשכבת Screen מעל הסטיל האמיתי. שליטה מלאה בעריכה.</p>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">04</span><span class="tc">00:05.0</span><span class="dur">1.5s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><h3>הבורג הראשון</h3></div>
+          <p>מאקרו קיצוני: מברג דיוק משחרר בורג בגב המחשב. סיבוב אחד, איטי.</p>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">05</span><span class="tc">00:06.5</span><span class="dur">1.5s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--ai">AI · I2V</span><h3>הפאנל נפתח</h3></div>
+          <p>גב המחשב מתרומם ונפרד. אור נשפך פנימה — מאווררים, סוללה, כבלי סרט.</p>
+<pre>back panel of a laptop slowly lifting away to reveal internal components,
+cooling fan, battery, ribbon cables, cool light spilling into the interior,
+macro lens, shallow depth of field, slow smooth vertical camera rise,
+matte black background, cinematic industrial product film
+<span class="neg">--no text, logos, brand names, hands, people, watermark</span></pre>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">06</span><span class="tc">00:08.0</span><span class="dur">1.2s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--ai">AI · T2V</span><h3>ניקוי</h3></div>
+          <p>מברשת אנטי־סטטית חולפת על להבי המאוורר. אבק מתפזר לתוך האור.</p>
+<pre>macro shot of an anti-static brush sweeping across cooling fan blades,
+dust particles scattering into a beam of light, extreme close up,
+shallow depth of field, slow motion, dark industrial background, cinematic
+<span class="neg">--no text, logos, faces, distorted fingers, hands</span></pre>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">07</span><span class="tc">00:09.2</span><span class="dur">1.2s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><h3>משחה תרמית</h3></div>
+          <p>נקודה אפורה מבריקה יורדת על ה־CPU. מאקרו קיצוני, פוקוס על הטיפה.</p>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">08</span><span class="tc">00:10.4</span><span class="dur">1.2s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><h3>בריאות סוללה</h3></div>
+          <p>קריאת מסך: קיבולת, מחזורי טעינה, אחוז בריאות. מספרים אמיתיים.</p>
+          <p class="note">להקליט את המסך עצמו (screen recording), לא לצלם את המסך במצלמה — מוירה וריצוד יהרסו את השוט.</p>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">09</span><span class="tc">00:11.6</span><span class="dur">1.4s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><h3>מטריצת בדיקות</h3></div>
+          <p>מונטאז׳ מהיר: לוחות בדיקה מתחלפים על התצוגה — פאנלים בצבע מלא, מפת פיקסלים מתים, טסט מקלדת.</p>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">10</span><span class="tc">00:13.0</span><span class="dur">1.0s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><h3>כל מקש</h3></div>
+          <p>מאקרו מהצד: אצבע לוחצת מקש אחרי מקש, מהר. קליק. קליק. קליק.</p>
+        </div>
+      </article>
+
+      <div class="beat">המוזיקה נופלת · דממה כמעט מלאה</div>
+
+      <article class="shot shot--hero">
+        <div class="rail"><span class="num">11</span><span class="tc">00:14.0</span><span class="dur">3.0s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><span class="chip chip--must">חובה</span><h3>החריטה</h3></div>
+          <p>ראש הלייזר נע מעל מקש. חוט עשן דקיק עולה. אות עברית מתגלה בעקבות הקרן.</p>
+          <p class="note">4K ב־120fps, האטה ל־40% בעריכה. אור צדי חזק וכהה מאחור — בלי זה העשן לא נראה. זה השוט החשוב ביותר בסרטון; הקצו לו שעה.</p>
+        </div>
+      </article>
+
+      <article class="shot shot--hero">
+        <div class="rail"><span class="num">12</span><span class="tc">00:17.0</span><span class="dur">3.0s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><span class="chip chip--must">חובה</span><h3>המקלדת נחשפת</h3></div>
+          <p>נסיגה איטית. המקלדת המלאה מתגלה, כל האותיות תופסות אור.</p>
+          <p class="note">סליידר איטי. אם אין — Ken Burns איטי על סטיל ברזולוציה מלאה נראה זהה כמעט לחלוטין בפורמט אנכי.</p>
+        </div>
+      </article>
+
+      <div class="beat">המוזיקה חוזרת · מלאה</div>
+
+      <article class="shot">
+        <div class="rail"><span class="num">13</span><span class="tc">00:20.0</span><span class="dur">1.5s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--ai">AI · I2V</span><h3>ליטוש</h3></div>
+          <p>מטלית מיקרופייבר חולפת על המכסה. גל ברק נע אחריה.</p>
+<pre>microfiber cloth polishing a brushed aluminum laptop lid, a band of
+specular highlight sweeping across the surface as it is wiped, macro,
+matte black background, single soft key light, slow motion,
+cinematic product commercial
+<span class="neg">--no text, logos, brand names, faces, distorted hands</span></pre>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">14</span><span class="tc">00:21.5</span><span class="dur">1.5s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--ai">AI · I2V</span><h3>סגירה</h3></div>
+          <p>המכסה נסגר בהילוך איטי. קו התפר נפגש בדיוק מוחלט.</p>
+<pre>laptop lid closing in extreme slow motion, precision seam line meeting,
+macro side profile, brushed aluminum chamfered edge, rim light running
+along the seam, black background, smooth mechanical motion, cinematic
+<span class="neg">--no text, logos, hands, people, watermark</span></pre>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">15</span><span class="tc">00:23.0</span><span class="dur">2.0s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--ai">AI · I2V</span><h3>שוט גיבור</h3></div>
+          <p>המחשב הסגור מסתובב לאט על שחור. אור מקיף מצייר את הקצוות.</p>
+<pre>closed laptop rotating slowly on a black seamless background, orbiting
+rim light tracing the chamfered edges, product commercial lighting,
+deep blacks, subtle floor reflection, turntable motion, cinematic
+<span class="neg">--no text, logos, brand names, people, watermark</span></pre>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">16</span><span class="tc">00:25.0</span><span class="dur">2.0s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><h3>התעוררות</h3></div>
+          <p>אצבע לוחצת על כפתור ההפעלה. המסך מתעורר, מסך האתחול נדלק.</p>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">17</span><span class="tc">00:27.0</span><span class="dur">4.0s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--real">REAL</span><h3>חיים</h3></div>
+          <p>שולחן אמיתי, אדם אמיתי מקליד. המקלדת העברית ברורה לגמרי בפריים. אור חלון חם.</p>
+          <p class="note">השוט היחיד עם בן אדם, והשוט הארוך ביותר. הניגוד מול המעבדה הקרה הוא כל הפואנטה. נדרש אישור צילום בכתב.</p>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="rail"><span class="num">18</span><span class="tc">00:31.0</span><span class="dur">4.0s</span></div>
+        <div class="shot-body">
+          <div class="shot-head"><span class="chip chip--gfx">GFX</span><h3>כרטיס סיום</h3></div>
+          <p>לוגו על שחור. מתחתיו הקו: <strong>לא חדש. חדש לגמרי.</strong> ואז שורת אחריות וכתובת האתר.</p>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="callout">
+      <h3>כללי אצבע לג׳נרציה</h3>
+      <ul class="plain">
+        <li><strong>תנועה אחת לשוט.</strong> ״dolly in״ או ״orbit left״ — לא שניהם. שתי תנועות מפרקות את המוצר.</li>
+        <li><strong>אם המוצר ״נמס״</strong> באמצע הקליפ — לייצר 3 שניות במקום 5 ולהאט בעריכה.</li>
+        <li><strong>נגד ריצוד:</strong> לייצר ב־720p ולהעלות ב־Topaz Video AI. יציב יותר מלייצר ישירות ב־4K.</li>
+        <li><strong>לשמור את ה־seed</strong> של כל וריאציה מוצלחת — כך משחזרים במקום להתחיל מאפס.</li>
+        <li><strong>אותו סטיל מקור</strong> לשוטים 13–15, אחרת המוצר משתנה בין שוט לשוט והצופה מרגיש שמשהו לא בסדר בלי לדעת למה.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ VO + COPY ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">VO &amp; on-screen copy</span>
+      <h2>קריינות וטקסט</h2>
+    </div>
+
+    <div class="callout">
+      <h3>רוב הצפיות יהיו מושתקות</h3>
+      <p>
+        ב־Reels וב־TikTok הרוב המכריע של ההפעלות מתחילות בלי סאונד. הטקסט על המסך חייב להעביר את
+        המסר לבדו — הקריינות היא שכבת בונוס, לא הנשיאה העיקרית. לכן מפיקים גם גרסה שקטה עם טקסט צרוב.
+      </p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="tc">TC</th><th>קריינות</th><th>טקסט על המסך</th></tr></thead>
+        <tbody>
+          <tr><td class="tc">00:04.5</td><td>״לכל מחשב שמגיע אלינו — יש עבר.״</td><td>לכל מחשב יש עבר</td></tr>
+          <tr><td class="tc">00:08.5</td><td>״אנחנו פותחים אותו. בודקים כל רכיב. מחליפים כל מה שצריך.״</td><td>[37] בדיקות · כל רכיב</td></tr>
+          <tr><td class="tc">00:15.0</td><td>(שקט, ואז חרישית) ״ואז חורטים בו עברית.״</td><td>עברית. בלייזר.</td></tr>
+          <tr><td class="tc">00:26.5</td><td>״אחריות מלאה. מחיר שפוי.״</td><td>אחריות [שנה] מלאה</td></tr>
+          <tr><td class="tc">00:31.5</td><td>״לא חדש. חדש לגמרי.״</td><td>לוגו + לא חדש. חדש לגמרי.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note prose">הערכים בסוגריים מרובעים הם מצייני מקום — יש להחליף במספרים האמיתיים שלכם לפני הפקה.</p>
+
+    <div class="cols">
+      <div>
+        <h3>הגדרות ElevenLabs</h3>
+        <ul class="plain">
+          <li>מודל Multilingual v2 ומעלה, קול גברי עמוק ורגוע</li>
+          <li>Stability ‎45–55‎ · Similarity ‎75‎ · Style ‎0–15</li>
+          <li>לא להעלות את Style — בעברית זה נשמע מלאכותי מיד</li>
+          <li>להקליט כל שורה בקובץ נפרד, לא כבלוק אחד. שליטה מלאה בטיימינג בעריכה.</li>
+          <li>אם התקציב מאפשר: קריין אנושי, 20 דקות אולפן. עדיין ניכר ההבדל.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>טיפוגרפיה עברית · 1080×1920</h3>
+        <ul class="plain">
+          <li>Heebo 800 או Assistant 700. שניהם חינמיים ובעלי לטינית תואמת.</li>
+          <li>כותרת ‎92–120px‎ · שורת משנה ‎48–60px</li>
+          <li>ריווח אותיות ‎0 עד ‎-1%‎ בלבד. עברית מהודקת נהיית בלתי קריאה.</li>
+          <li>Safe area: ‎250px מלמעלה, ‎420px מלמטה, ‎80px מהצדדים.</li>
+          <li>לוודא יישור לימין ושסימני הפיסוק לא קופצים לצד הלא נכון — בעיה נפוצה ב־CapCut.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SHOOT ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Shoot day</span>
+      <h2>יום הצילום</h2>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>הסט — כל מה שצריך</h3>
+        <ul class="plain">
+          <li>נייר או קאפה שחור מט לרקע — כ־‎₪60</li>
+          <li>מקור אור רך אחד ב־45° מהצד ומעט מאחור. חלון גדול ביום מעונן הוא מושלם ובחינם.</li>
+          <li>לוח קאפה לבן בצד הנגדי כמחזיר אור</li>
+          <li>חצובה לטלפון — לא אופציונלי</li>
+          <li>מיקרופייבר ואיזופרופנול ‎70%</li>
+        </ul>
+      </div>
+      <div>
+        <h3>הגדרות מצלמה</h3>
+        <ul class="plain">
+          <li>מצב Pro / ידני. ISO ‎50–100.</li>
+          <li>פוקוס ידני ונעול. איזון לבן נעול על ‎5200K.</li>
+          <li>סטילס ב־RAW / ProRAW · 3 חשיפות לכל זווית</li>
+          <li>וידאו ב־4K 60fps · שוט הלייזר ב־120fps</li>
+          <li>לנקות טביעות אצבע לפני <em>כל</em> שוט. במאקרו טביעה אחת הורסת קאדר.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="stack">
+      <h3>12 הסטילס</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="tc">#</th><th>הסטיל</th><th>מזין את</th></tr></thead>
+          <tbody>
+            <tr><td class="num">01</td><td>לפטופ סגור בשקית אנטי־סטטית, על שחור</td><td class="num">שוט 01</td></tr>
+            <tr><td class="num">02</td><td>לפטופ סגור, זווית 3/4, רקע שחור</td><td class="num">שוטים 14, 15</td></tr>
+            <tr><td class="num">03</td><td>לפטופ פתוח ב־110°, טופ־דאון קל</td><td class="num">שוט 03</td></tr>
+            <tr><td class="num">04</td><td>גב פתוח, פנים המחשב חשוף</td><td class="num">שוטים 05, 06</td></tr>
+            <tr><td class="num">05</td><td>מקלדת טופ־דאון אחרי חריטה — <strong>הקריטי ביותר</strong></td><td class="num">שוט 12</td></tr>
+            <tr><td class="num">06</td><td>מקש בודד, מאקרו קיצוני, האות ממלאת רבע פריים</td><td class="num">שוט 11</td></tr>
+            <tr><td class="num">07</td><td>ראש הלייזר מעל המקלדת, סטטי</td><td class="num">שוט 11</td></tr>
+            <tr><td class="num">08</td><td>פרופיל צד של המכסה הסגור, קו התפר</td><td class="num">שוט 14</td></tr>
+            <tr><td class="num">09</td><td>מסך דולק במסך האתחול</td><td class="num">שוט 16</td></tr>
+            <tr><td class="num">10</td><td>המחשב על שולחן אמיתי, בשימוש</td><td class="num">שוט 17</td></tr>
+            <tr><td class="num">11</td><td>שולחן העבודה עם הכלים פרוסים</td><td class="num">רזרבה</td></tr>
+            <tr><td class="num">12</td><td>ערימת יחידות שנבדקו</td><td class="num">רזרבה</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="stack">
+      <h3>חמשת שוטי הווידאו שחייבים להיות אמיתיים</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="tc">שוט</th><th>מה מצלמים</th><th class="tc">פריימרייט</th><th>למה לא AI</th></tr></thead>
+          <tbody>
+            <tr><td class="tc">11</td><td>החריטה בלייזר</td><td class="num">120fps</td><td>AI לא יודע לכתוב עברית — יצא ג׳יבריש</td></tr>
+            <tr><td class="tc">12</td><td>חשיפת המקלדת</td><td class="num">60fps</td><td>אותה סיבה, ובגדול על המסך</td></tr>
+            <tr><td class="tc">17</td><td>ידיים מקלידות</td><td class="num">60fps</td><td>אצבעות מעוותות + אותיות</td></tr>
+            <tr><td class="tc">08–09</td><td>מסכי דיאגנוסטיקה</td><td class="num">Screen rec</td><td>ממשק מומצא נראה מזויף מיד</td></tr>
+            <tr><td class="tc">16</td><td>לחיצת הפעלה והדלקה</td><td class="num">60fps</td><td>אצבע במאקרו + תוכן מסך</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SOUND ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Sound</span>
+      <h2>מוזיקה וסאונד דיזיין</h2>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>מבנה מוזיקלי</h3>
+        <ul class="plain">
+          <li><strong>00:00–00:14</strong> — מינימלי. תו בס נמוך מתמשך, פעימות דופק בודדות, מרקם שמתעבה.</li>
+          <li><strong>00:14–00:20</strong> — כמעט דממה. רק רוורב ואמביינס החדר. <em>הנפילה הזו היא מה שגורם לחריטה לעבוד.</em></li>
+          <li><strong>00:20–00:31</strong> — חזרה מלאה. מלודיה נקייה, קצב יציב, בנייה.</li>
+          <li><strong>00:31–00:35</strong> — החזקה ודעיכה נקייה על הלוגו.</li>
+        </ul>
+<pre>minimal cinematic electronic, deep sustained sub bass, sparse piano
+motif, precise mechanical percussion, slow build, full stop at 0:14
+leaving only ambient reverb, returns at 0:20 with warm resolving
+melody, no vocals, product commercial, 35 seconds, 90 bpm</pre>
+      </div>
+      <div>
+        <h3>נקודות סאונד</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="tc">TC</th><th>אפקט</th></tr></thead>
+            <tbody>
+              <tr><td class="tc">00:02.0</td><td>רשרוש ניילון</td></tr>
+              <tr><td class="tc">00:05.0</td><td>קליק מברג — יבש, מדויק</td></tr>
+              <tr><td class="tc">00:06.5</td><td>פאנל נפרד, חריקה קלה</td></tr>
+              <tr><td class="tc">00:10.4</td><td>ביפ דיאגנוסטיקה נקי</td></tr>
+              <tr><td class="tc">00:13.0</td><td>קליקים של מקשים, מהירים</td></tr>
+              <tr><td class="tc">00:14.0</td><td>הכל נעצר. רק זמזום הלייזר.</td></tr>
+              <tr><td class="tc">00:21.5</td><td>סגירת מכסה, קליק מגנטי</td></tr>
+              <tr><td class="tc">00:25.0</td><td>צליל אתחול</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">רישוי: Suno ו־Udio דורשים מסלול בתשלום לשימוש מסחרי. לקמפיין ממומן, Artlist או Epidemic Sound בטוחים יותר משפטית.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GRADE + EDIT ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Grade &amp; cut</span>
+      <h2>צבע וקצב</h2>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>תיקון צבע</h3>
+        <ul class="plain">
+          <li><strong>בסיס:</strong> שחורים שקועים (lift ‎2–3%‎), צללים קרירים בגוון טיל, היילייטס נייטרליים. קונטרסט גבוה, רוויה ‎80%‎.</li>
+          <li><strong>המהלך:</strong> בין 00:14 ל־00:20 להעלות טמפרטורה ב־‎300–500K ולתת לכתום הלייזר להיות הצבע הרווי היחיד בפריים.</li>
+          <li><strong>מ־00:27:</strong> חם ורך, כמו אור בית. הניגוד מול המעבדה הקרה הוא המסר, בלי מילה אחת.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>קצב העריכה</h3>
+        <ul class="plain">
+          <li><strong>00:00–00:14</strong> — הקאטים מתקצרים בהדרגה, ‎2.0 ← 1.0 שניות. מצטבר.</li>
+          <li><strong>00:14–00:20</strong> — שני שוטים בלבד, 3 שניות כל אחד. פתאום יש זמן לנשום.</li>
+          <li><strong>00:20–00:27</strong> — קצב בינוני, ‎1.5–2.0.</li>
+          <li><strong>00:27–00:35</strong> — שוט ארוך וכרטיס. נחיתה.</li>
+          <li><strong>בלי טרנזישנים.</strong> קאט ישר בלבד, למעט דיזולב אחד אפשרי לתוך כרטיס הסיום.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DELIVERABLES ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Deliverables</span>
+      <h2>נגזרות</h2>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>גרסה</th><th class="tc">רזולוציה</th><th class="tc">אורך</th><th>שימוש</th></tr></thead>
+        <tbody>
+          <tr><td><strong>מאסטר</strong></td><td class="num">1080×1920</td><td class="num">35 שנ׳</td><td>Reels, TikTok, Stories</td></tr>
+          <tr><td>ווב</td><td class="num">1920×1080</td><td class="num">35 שנ׳</td><td>אתר הבית, יוטיוב</td></tr>
+          <tr><td>קצר</td><td class="num">1080×1920</td><td class="num">15 שנ׳</td><td>פרסום ממומן — שוטים 01, 05, 11, 12, 15, 18</td></tr>
+          <tr><td>באמפר</td><td class="num">1080×1920</td><td class="num">6 שנ׳</td><td>פרי־רול — שוטים 11, 12, 18 בלבד</td></tr>
+          <tr><td>פיד</td><td class="num">1080×1080</td><td class="num">35 שנ׳</td><td>פיד אינסטגרם ופייסבוק</td></tr>
+          <tr><td>שקטה</td><td class="num">כל הגרסאות</td><td class="num">—</td><td>טקסט צרוב, בלי קריינות</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>אקספורט</h3>
+        <ul class="plain">
+          <li>H.264, ‎10–14 Mbps ל־1080p, AAC ‎320kbps</li>
+          <li>לתייג sRGB ולא Rec.709 — פלטפורמות מפרשות את Rec.709 לא נכון ומשטיחות את השחורים</li>
+          <li>הנורמליזציה של אינסטגרם וטיקטוק אגרסיבית. לבדוק את הקובץ אחרי העלאה, לא רק לפניה.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>קאדראז׳ ל־16:9</h3>
+        <ul class="plain">
+          <li>לצלם את הסטילס רחב מספיק כדי לחתוך לשני היחסים מאותו מקור</li>
+          <li>בשוטי ה־AI לייצר פעמיים — ‎9:16 ו־‎16:9 בנפרד. קרופ מאנכי לרוחבי מאבד יותר מדי.</li>
+          <li>בגרסת ה־16:9 שוט 12 (חשיפת המקלדת) עובד טוב יותר — יש רוחב לכל השורה.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BUDGET ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Schedule &amp; budget</span>
+      <h2>לוח זמנים ועלות</h2>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>ארבעה ימי עבודה</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="tc">יום</th><th>מה עושים</th><th class="tc">שעות</th></tr></thead>
+            <tbody>
+              <tr><td class="num">1</td><td>סטילס + חמשת שוטי הווידאו האמיתיים</td><td class="num">4</td></tr>
+              <tr><td class="num">2</td><td>ג׳נרציה — 7 שוטי AI, 3 וריאציות לכל אחד</td><td class="num">4</td></tr>
+              <tr><td class="num">3</td><td>עריכה, קריינות, מוזיקה, סאונד, גרייד</td><td class="num">5</td></tr>
+              <tr><td class="num">4</td><td>נגזרות ובקרת איכות</td><td class="num">3</td></tr>
+              <tr class="total"><td class="num">—</td><td>סה״כ</td><td class="num">16</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3>עלות משוערת</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>סעיף</th><th class="tc">עלות</th></tr></thead>
+            <tbody>
+              <tr><td>קרדיטים לווידאו AI</td><td class="num">$40–80</td></tr>
+              <tr><td>ElevenLabs, חודש</td><td class="num">$5–22</td></tr>
+              <tr><td>מוזיקה</td><td class="num">$10–30</td></tr>
+              <tr><td>רקע שחור ומחזיר אור</td><td class="num">₪60</td></tr>
+              <tr><td>חצובה לטלפון</td><td class="num">₪80–150</td></tr>
+              <tr><td>DaVinci Resolve</td><td class="num">חינם</td></tr>
+              <tr class="total"><td>סה״כ</td><td class="num">מתחת ל־₪800</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">בתוספת כ־16 שעות עבודה. הפקה מקבילה בבית הפקה: ‎₪15,000–40,000.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QC ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">QC</span>
+      <h2>בקרת איכות לפני פרסום</h2>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>טכני</h3>
+        <ul class="check">
+          <li><strong>אין אות עברית שנוצרה ב־AI</strong> באף פריים. לעבור שוט־שוט, בעצירה.</li>
+          <li>אין לוגו יצרן מעוות — להסתיר בזווית או להחליף בפוטג׳ אמיתי</li>
+          <li>ספירת מקשים ופריסה תואמות בין שוטים. AI מוסיף ומוריד מקשים.</li>
+          <li>הטקסט קריא במצב מושתק, בלי הקריינות</li>
+          <li>שום טקסט לא נופל מתחת לכפתורי הממשק של הפלטפורמה</li>
+          <li>עקביות: אותו דגם, אותו צבע, אותן מדבקות לאורך כל הסרטון</li>
+          <li>הפיסוק העברי בצד הנכון של השורה</li>
+          <li><strong>לצפות בטלפון</strong> בבהירות ‎50%‎ — לא במסך המחשב</li>
+        </ul>
+      </div>
+      <div>
+        <h3>משפטי</h3>
+        <ul class="check">
+          <li>אין שימוש בפונט, במוזיקה, בפוטג׳ או בנכס אחר של אפל</li>
+          <li>אין ניסוח שמרמז על קשר, שיתוף פעולה או אישור מצד אפל</li>
+          <li>לוגואים של יצרנים בשימוש נומינטיבי בלבד, בלי לרמז על שיווק מטעמם</li>
+          <li><strong>כל טענה מספרית</strong> — מספר הבדיקות, תקופת האחריות — אמיתית וניתנת לגיבוי במסמך</li>
+          <li><strong>המילה ״מחודש״ מופיעה בבירור.</strong> הצגת מחשב משומש כחדש היא הפרה של חוק הגנת הצרכן.</li>
+          <li>אישור צילום בכתב מכל אדם שפניו או ידיו בפריים</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h3>הדבר האחד שיסגיר שהסרטון נוצר ב־AI</h3>
+      <p>
+        לא איכות התמונה — אלא אות עברית שגויה בקלוז־אפ. מודלי וידאו מייצרים צורות שנראות
+        <em>כמעט</em> כמו עברית, והעין הישראלית תופסת את זה בפריים אחד. זו בדיוק הסיבה ששוטים 11 ו־12
+        מסומנים כחובה, וזו גם הסיבה שהם השוטים הכי טובים בסרטון: הם היחידים שאף מתחרה לא יכול להוריד מסטוק.
+      </p>
+    </div>
+  </section>
+
+</div>
